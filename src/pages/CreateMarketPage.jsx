@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -28,7 +29,16 @@ const CreateMarketPage = () => {
   // États pour le formulaire de création
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [selectedCollector, setSelectedCollector] = useState('');
+  const [selectedCollectors, setSelectedCollectors] = useState([]);
+
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Contrôle du modal de modification
+const [editMarketId, setEditMarketId] = useState(null); // ID du marché en modification
+const [editCollectors, setEditCollectors] = useState([]); // Liste des collecteurs sélectionnés
+
+
+
+
 
   // Gestion de l'ouverture et de la fermeture du modal
   const handleOpenModal = () => setIsModalOpen(true);
@@ -37,6 +47,7 @@ const CreateMarketPage = () => {
 const navigate = useNavigate();
 
 const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
+
 
   // Fonction pour récupérer la liste des collecteurs depuis l'API
   const fetchCollectors = async () => {
@@ -97,43 +108,138 @@ const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
     fetchCollectors(); // Récupérer les collecteurs lors du chargement de la page
   }, []);
 
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/api/markets`,
-        { name, location, collector: selectedCollector },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      alert('Marché créé avec succès !');
-      setName('');
-      setLocation('');
-      setSelectedCollector('');
-      handleCloseModal(); // Ferme le modal après la création
-  
-      // Recharge les marchés depuis l'API
-      fetchMarkets();
+        const token = localStorage.getItem('token');
+        console.log('Données envoyées :', { name, location, collector: selectedCollectors });
+
+        const response = await axios.post(
+            `${API_URL}/api/markets`,
+            { name, location, collector: selectedCollectors }, // Remplacé par collector
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log('Réponse du serveur :', response.data);
+        alert('Marché créé avec succès !');
+        setName('');
+        setLocation('');
+        setSelectedCollectors([]);
+        handleCloseModal();
+        fetchMarkets();
     } catch (error) {
-      console.error('Erreur lors de la création du marché :', error.message);
-      alert('Erreur lors de la création du marché.');
+        console.error('Erreur lors de la création du marché :', error.message);
+        alert('Erreur lors de la création du marché.');
     }
-  };
-  
-  
+};
 
 
-  const handleChange = (e) => {
-    console.log('🔹 Collecteur sélectionné :', e.target.value);
-    setSelectedCollector(e.target.value);
-  };
-  
+
+const handleEditCollectors = (marketId, currentCollectors) => {
+  setEditMarketId(marketId);
+  setEditCollectors(currentCollectors.map((c) => c._id)); // Pré-sélectionner les collecteurs existants
+  setIsEditModalOpen(true);
+};
+
+
+
+// const handleUpdateCollectors = async () => {
+//   try {
+//     const token = localStorage.getItem("token");
+
+//     if (!editMarketId) {
+//       console.error("❌ Aucun marché sélectionné pour la mise à jour.");
+//       return;
+//     }
+
+//     console.log("🔄 Mise à jour des collecteurs pour le marché :", editMarketId);
+//     console.log("📥 Collecteurs sélectionnés :", editCollectors);
+
+//     // Envoyer tous les collecteurs sélectionnés (anciens + nouveaux)
+//     const response = await axios.put(
+//       `${API_URL}/api/markets/${editMarketId}/collectors`,
+//       { collector: editCollectors },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("✅ Collecteurs mis à jour :", response.data);
+//     alert("Collecteurs mis à jour avec succès !");
+//     fetchMarkets(); // Rafraîchir la liste des marchés après mise à jour
+//     setIsEditModalOpen(false);
+//   } catch (error) {
+//     console.error("❌ Erreur lors de la mise à jour des collecteurs :", error.message);
+//     alert("Erreur lors de la mise à jour des collecteurs.");
+//   }
+// };
+
+const handleUpdateCollectors = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!editMarketId) {
+      console.error("❌ Aucun marché sélectionné pour la mise à jour.");
+      return;
+    }
+
+    console.log("🔄 Mise à jour des collecteurs pour le marché :", editMarketId);
+    console.log("📥 Collecteurs sélectionnés :", editCollectors);
+
+    // 1️⃣ Récupérer les collecteurs existants du marché
+    const marketResponse = await axios.get(`${API_URL}/api/markets/${editMarketId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!marketResponse.data || !marketResponse.data.collector) {
+      console.error("❌ Impossible de récupérer les collecteurs actuels du marché.");
+      alert("Erreur lors de la récupération des collecteurs du marché.");
+      return;
+    }
+
+    const existingCollectors = marketResponse.data.collector.map((c) => c._id);
+    console.log("📌 Collecteurs actuels du marché :", existingCollectors);
+
+    // 2️⃣ Fusionner les anciens collecteurs avec les nouveaux sans doublon
+    const updatedCollectors = [...new Set([...existingCollectors, ...editCollectors])];
+
+    console.log("✅ Nouvelle liste de collecteurs après mise à jour :", updatedCollectors);
+
+    // 3️⃣ Envoyer la mise à jour
+    const response = await axios.put(
+      `${API_URL}/api/markets/${editMarketId}/collectors`,
+      { collector: updatedCollectors }, // Nouvelle liste complète
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Collecteurs mis à jour avec succès :", response.data);
+    alert("Collecteurs mis à jour avec succès !");
+    
+    fetchMarkets(); // Rafraîchir la liste des marchés après mise à jour
+    setIsEditModalOpen(false);
+  } catch (error) {
+    console.error("❌ Erreur lors de la mise à jour des collecteurs :", error.message);
+    alert("Erreur lors de la mise à jour des collecteurs.");
+  }
+};
+
+
+
   return (
     <Box
       sx={{
@@ -206,18 +312,51 @@ const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom du Marché</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Localisation</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Collecteur (ID)</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Action</TableCell>
+
                 </TableRow>
               </TableHead>
+
+
+
+
               <TableBody>
-                {markets.map((market, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{market.name}</TableCell>
-                    <TableCell>{market.location}</TableCell>
-                    <TableCell>{market.collector.name}</TableCell>
-                    <TableCell>{market.collector ? market.collector.name : 'Aucun collecteur assigné'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+  {markets.map((market, index) => (
+    <TableRow key={index}>
+      <TableCell>{market.name}</TableCell>
+      <TableCell>{market.location}</TableCell>
+      <TableCell>
+        {Array.isArray(market.collector) && market.collector.length > 0 ? (
+          market.collector.map((collector, idx) => (
+            <div key={idx} style={{ marginBottom: "5px" }}>
+              <strong>{collector.name || "Nom non disponible"}</strong> <br />
+              📞 {collector.phone || "Téléphone non disponible"} <br />
+              ✉️ {collector.email || "Email non disponible"}
+              <hr style={{ border: "0.5px solid #ccc" }} />
+            </div>
+          ))
+        ) : (
+          <span style={{ color: "gray" }}>Aucun collecteur assigné</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => handleEditCollectors(market._id, market.collector)}
+        >
+          Modifier Collecteurs
+        </Button>
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+
+
+
+
+
+
             </Table>
           </TableContainer>
         ) : (
@@ -268,27 +407,31 @@ const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
               required
             />
 
+
 <FormControl fullWidth margin="normal" required>
-  <InputLabel id="collector-select-label">Collecteur</InputLabel>
+  <InputLabel id="collector-select-label">Collecteurs</InputLabel>
   <Select
     labelId="collector-select-label"
-    value={selectedCollector}
-    onChange={handleChange} // Utilisez handleChange qui était déjà défini
-    label="Collecteur"
+    multiple
+    value={selectedCollectors}
+    onChange={(e) => setSelectedCollectors(e.target.value)}
+    renderValue={(selected) => 
+      selected
+        .map(id => {
+          const collector = collectors.find(c => c._id === id);
+          return collector ? (collector.user ? collector.user.name : 'Nom non disponible') : '';
+        })
+        .join(', ')
+    }
+    label="Collecteurs"
   >
-    {collectors.length > 0 ? (
-      collectors.map((collector) => (
-        <MenuItem key={collector._id} value={collector._id}>
-          {collector.user ? collector.user.name : "Nom non disponible"}
-        </MenuItem>
-      ))
-    ) : (
-      <MenuItem disabled>Aucun collecteur disponible</MenuItem>
-    )}
+    {collectors.map((collector) => (
+      <MenuItem key={collector._id} value={collector._id}>
+        {collector.user ? collector.user.name : "Nom non disponible"}
+      </MenuItem>
+    ))}
   </Select>
 </FormControl>
-
-
 
 
 
@@ -306,6 +449,37 @@ const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
           </form>
         </Box>
       </Modal>
+
+
+      {/* Modale de modification des collecteurs */}
+{/* Modal de modification des collecteurs */}
+<Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+  <Box sx={{ p: 4, bgcolor: "background.paper", borderRadius: 2, maxWidth: 400, mx: "auto", mt: 10 }}>
+    <Typography variant="h6">Modifier Collecteurs</Typography>
+    
+    <FormControl fullWidth margin="normal">
+      <InputLabel>Collecteurs</InputLabel>
+      <Select
+        multiple
+        value={editCollectors}
+        onChange={(e) => setEditCollectors(e.target.value)}
+      >
+        {collectors.map((c) => (
+          <MenuItem key={c._id} value={c._id}>
+            {c.user?.name || "Nom non disponible"}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+    <Button variant="contained" color="primary" fullWidth onClick={handleUpdateCollectors}>
+      Mettre à jour
+    </Button>
+  </Box>
+</Modal>
+
+
+
     </Box>
   );
 };

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,82 +10,41 @@ import {
   Typography,
   Box,
   Chip,
-} from '@mui/material';
-import Autocomplete from '@mui/material/Autocomplete';
-
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Autocomplete,
+} from "@mui/material";
 
 function AddTaxpayerModal({ open, onClose, onSave, zones }) {
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    activityType: '',
-    coordinates: {
-      latitude: '',
-      longitude: '',
-    },
-    media: {
-      photos: [], // Tableau pour photos
-      videos: [], // Tableau pour vidéos
-    },
-    taxes: [], // Ajout des taxes associées
-    status: 'active', // Par défaut
-    zones,
+    taxpayerType: "Individu", // ✅ Choix par défaut
+    name: "",
+    businessName: "",
+    registrationNumber: "",
+    idNumber: "",
+    email: "",
+    phone: "",
+    address: "",
+    activityType: "",
+    activitySector: "",
+    zone: "",
+    communalDistrict: "",
+    coordinates: { latitude: "", longitude: "" },
+    media: { photos: [], videos: [] },
+    taxes: [],
+    status: "active",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Gestion des champs imbriqués
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: { ...prev[parent], [child]: value },
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleMediaAdd = (type, value) => {
-    if (value.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        media: {
-          ...prev.media,
-          [type]: [...prev.media[type], value.trim()],
-        },
-      }));
-    }
-  };
-
-  const handleMediaRemove = (type, index) => {
-    setFormData((prev) => ({
-      ...prev,
-      media: {
-        ...prev.media,
-        [type]: prev.media[type].filter((_, i) => i !== index),
-      },
-    }));
-  };
-
-  const handleFileUpload = (file) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({
-        ...prev,
-        media: {
-          ...prev.media,
-          photos: [...prev.media.photos, reader.result], // Ajouter l'image convertie
-        },
-      }));
-    };
-    reader.readAsDataURL(file);
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.address || !formData.activityType) {
-      alert('Veuillez remplir tous les champs obligatoires.');
+    if (!formData.name || !formData.address || !formData.activityType || !formData.phone || !formData.zone || !formData.communalDistrict) {
+      alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
     onSave(formData);
@@ -92,203 +52,122 @@ function AddTaxpayerModal({ open, onClose, onSave, zones }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Ajouter un Contribuable</DialogTitle>
-    
+
       <DialogContent>
-  <Box
-    sx={{
-      backgroundColor: '#f9f9f9', // Couleur de fond clair
-      p: 3, // Padding interne
-      borderRadius: 2, // Coins arrondis
-      boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Ombre légère
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 2, // Espacement entre les éléments
-    }}
-  >
-    {/* Champs de base */}
-    <TextField
-      fullWidth
-      margin="normal"
-      label="Nom"
-      name="name"
-      value={formData.name}
-      onChange={handleChange}
-      required
-    />
-    <TextField
-      fullWidth
-      margin="normal"
-      label="Adresse"
-      name="address"
-      value={formData.address}
-      onChange={handleChange}
-      required
-    />
-    <TextField
-      fullWidth
-      margin="normal"
-      label="Téléphone"
-      name="phone"
-      value={formData.phone}
-      onChange={handleChange}
-    />
-    <TextField
-      fullWidth
-      margin="normal"
-      label="Type d'Activité"
-      name="activityType"
-      value={formData.activityType}
-      onChange={handleChange}
-      required
-    />
+        {/* ✅ Type de contribuable (Individu ou Entreprise) */}
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Type de Contribuable</InputLabel>
+          <Select name="taxpayerType" value={formData.taxpayerType} onChange={handleChange}>
+            <MenuItem value="Individu">Individu</MenuItem>
+            <MenuItem value="Entreprise">Entreprise</MenuItem>
+          </Select>
+        </FormControl>
 
-    <Autocomplete
-      options={zones}
-      getOptionLabel={(option) => option.name || ''}
-      onChange={(event, newValue) => {
-        setFormData((prev) => ({
-          ...prev,
-          zone: newValue?._id || '', // Enregistrer l'ID de la zone sélectionnée
-        }));
-      }}
-      renderInput={(params) => (
+        {/* ✅ Informations du contribuable */}
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr" }}>
+          {formData.taxpayerType === "Individu" ? (
+            <TextField fullWidth label="Nom et Prénom" name="name" value={formData.name} onChange={handleChange} required />
+          ) : (
+            <>
+              <TextField fullWidth label="Nom de l'Entreprise" name="businessName" value={formData.businessName} onChange={handleChange} required />
+              <TextField fullWidth label="N° d'Enregistrement" name="registrationNumber" value={formData.registrationNumber} onChange={handleChange} required />
+            </>
+          )}
+          <TextField fullWidth label="Téléphone" name="phone" value={formData.phone} onChange={handleChange} required />
+          <TextField fullWidth label="Adresse" name="address" value={formData.address} onChange={handleChange} required />
+          <TextField fullWidth label="Email (optionnel)" name="email" value={formData.email} onChange={handleChange} />
+          {formData.taxpayerType === "Individu" && (
+            <TextField fullWidth label="N° d'Identification (CNI, Passeport…)" name="idNumber" value={formData.idNumber} onChange={handleChange} />
+          )}
+        </Box>
+
+        {/* ✅ Informations fiscales */}
+        <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+          Informations Fiscales
+        </Typography>
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr" }}>
+          <TextField fullWidth label="Type d'Activité" name="activityType" value={formData.activityType} onChange={handleChange} required />
+          <TextField fullWidth label="Secteur d'Activité" name="activitySector" value={formData.activitySector} onChange={handleChange} />
+        </Box>
+
+        {/* ✅ Zone et Arrondissement Communal */}
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr", mt: 2 }}>
+          <Autocomplete
+            options={zones}
+            getOptionLabel={(option) => option.name || ""}
+            onChange={(event, newValue) => {
+              setFormData((prev) => ({ ...prev, zone: newValue?._id || "" }));
+            }}
+            renderInput={(params) => <TextField {...params} label="Zone" placeholder="Sélectionnez une zone" />}
+          />
+          <TextField fullWidth label="Arrondissement Communal" name="communalDistrict" value={formData.communalDistrict} onChange={handleChange} required />
+        
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr", mt: 2 }}>
+  <TextField 
+    fullWidth 
+    label="Ville" 
+    name="city" 
+    value={formData.city} 
+    onChange={handleChange} 
+    required 
+  />
+  <TextField 
+    fullWidth 
+    label="Région" 
+    name="region" 
+    value={formData.region} 
+    onChange={handleChange} 
+    required 
+  />
+</Box>
+
+        
+        
+        
+        </Box>
+
+        {/* ✅ Coordonnées GPS */}
+        <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+          Coordonnées GPS (optionnel)
+        </Typography>
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr" }}>
+          <TextField fullWidth label="Latitude" name="coordinates.latitude" value={formData.coordinates.latitude} onChange={handleChange} />
+          <TextField fullWidth label="Longitude" name="coordinates.longitude" value={formData.coordinates.longitude} onChange={handleChange} />
+        </Box>
+
+        {/* ✅ Médias (Photos & Vidéos) */}
+        <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+          Médias : Photos et Vidéos
+        </Typography>
+        <Button variant="contained" component="label" sx={{ mr: 2 }}>
+          Ajouter une Photo
+          <input type="file" accept="image/*" hidden onChange={(e) => console.log("Ajout photo :", e.target.files[0])} />
+        </Button>
         <TextField
-          {...params}
-          label="Zone"
-          placeholder="Sélectionnez une zone"
-          margin="normal"
+          fullWidth
+          label="Ajouter une Vidéo (URL)"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.target.value) {
+              console.log("Ajout vidéo :", e.target.value);
+              e.target.value = "";
+            }
+          }}
+          placeholder="Appuyez sur Entrée pour ajouter une vidéo"
         />
-      )}
-    />
-  </Box>
 
+      </DialogContent>
 
-  <Box sx={{ my: 2 }}>
-  <Typography variant="h6" gutterBottom>
-    Coordonnées GPS
-  </Typography>
-  <TextField
-    fullWidth
-    margin="normal"
-    label="Latitude (facultatif)"
-    name="coordinates.latitude"
-    value={formData.coordinates.latitude}
-    onChange={handleChange}
-  />
-  <TextField
-    fullWidth
-    margin="normal"
-    label="Longitude (facultatif)"
-    name="coordinates.longitude"
-    value={formData.coordinates.longitude}
-    onChange={handleChange}
-  />
-</Box>
-
-<Box sx={{ my: 2 }}>
-  <Typography variant="h6" gutterBottom>
-    Médias : Photos
-  </Typography>
-  <Button
-    variant="contained"
-    component="label"
-    sx={{ mr: 2 }}
-  >
-    Ajouter une Photo
-    <input
-      type="file"
-      accept="image/*"
-      hidden
-      onChange={(e) => handleFileUpload(e.target.files[0])}
-    />
-  </Button>
-  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-    {formData.media.photos.map((photo, index) => (
-      <Chip
-        key={index}
-        label={`Photo ${index + 1}`}
-        onDelete={() => handleMediaRemove('photos', index)}
-        color="primary"
-      />
-    ))}
-  </Box>
-</Box>
-
-<Box sx={{ my: 2 }}>
-  <Typography variant="h6" gutterBottom>
-    Médias : Vidéos
-  </Typography>
-  <TextField
-    fullWidth
-    margin="normal"
-    label="Ajouter une Vidéo (URL)"
-    onKeyDown={(e) => {
-      if (e.key === 'Enter' && e.target.value) {
-        handleMediaAdd('videos', e.target.value);
-        e.target.value = '';
-      }
-    }}
-    placeholder="Appuyez sur Entrée pour ajouter une vidéo"
-  />
-  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-    {formData.media.videos.map((video, index) => (
-      <Chip
-        key={index}
-        label={`Vidéo ${index + 1}`}
-        onDelete={() => handleMediaRemove('videos', index)}
-        color="secondary"
-      />
-    ))}
-  </Box>
-</Box>
-
-</DialogContent>
-
-
-
-<DialogActions sx={{ justifyContent: 'space-between', p: 2 }}>
-  <Button
-    onClick={onClose}
-    variant="outlined"
-    color="secondary"
-    sx={{
-      px: 3,
-      py: 1,
-      fontWeight: 'bold',
-      '&:hover': {
-        backgroundColor: '#f8d7da',
-      },
-    }}
-  >
-    Annuler
-  </Button>
-  <Button
-    onClick={handleSave}
-    variant="contained"
-    color="primary"
-    sx={{
-      px: 3,
-      py: 1,
-      fontWeight: 'bold',
-      '&:hover': {
-        backgroundColor: '#0056b3',
-      },
-    }}
-  >
-    Sauvegarder
-  </Button>
-</DialogActions>
-
-
-
-
-
-   
-
-
-
+      {/* ✅ Actions */}
+      <DialogActions sx={{ justifyContent: "space-between", p: 2 }}>
+        <Button onClick={onClose} variant="outlined" color="secondary">
+          Annuler
+        </Button>
+        <Button onClick={handleSave} variant="contained" color="primary">
+          Sauvegarder
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

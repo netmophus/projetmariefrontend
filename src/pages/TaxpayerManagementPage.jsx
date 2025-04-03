@@ -192,104 +192,114 @@ const fetchZones = async () => {
         Retour au Dashboard
       </Button>
       <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>Nom</strong></TableCell>
-              <TableCell><strong>Téléphone</strong></TableCell>
-              <TableCell><strong>Adresse</strong></TableCell>
-              <TableCell><strong>Zone</strong></TableCell>
-              <TableCell><strong>Actions</strong></TableCell>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell><strong>Nom</strong></TableCell>
+        <TableCell><strong>Téléphone</strong></TableCell>
+        <TableCell><strong>Adresse</strong></TableCell>
+        <TableCell><strong>Zone</strong></TableCell>
+        <TableCell><strong>NIF</strong></TableCell> {/* 🔹 Nouvelle colonne */}
+        <TableCell><strong>Type</strong></TableCell> {/* 🔹 Nouvelle colonne */}
+        <TableCell><strong>Inscrit le</strong></TableCell> {/* 🔹 Nouvelle colonne */}
+        <TableCell><strong>Actions</strong></TableCell>
+      </TableRow>
+    </TableHead>
+   
+    <TableBody>
+      {Array.isArray(taxpayers) && taxpayers.length > 0 ? (
+        taxpayers
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((taxpayer) => (
+            <TableRow key={taxpayer._id}>
+              {/* Nom du contribuable */}
+              <TableCell>{taxpayer.user?.name || 'N/A'}</TableCell>
+
+              {/* Téléphone */}
+              <TableCell>{taxpayer.user?.phone || 'N/A'}</TableCell>
+
+              {/* Adresse */}
+              <TableCell>{taxpayer.address}</TableCell>
+
+              {/* Zone */}
+              <TableCell>{taxpayer.zone?.name || 'N/A'}</TableCell>
+
+              {/* 🔹 NIF (Numéro d'Identification Fiscale) */}
+              <TableCell>{taxpayer.nif || 'Non renseigné'}</TableCell>
+
+              {/* 🔹 Type de contribuable */}
+              <TableCell>
+                {taxpayer.type === "company" ? "Entreprise" : "Individu"}
+              </TableCell>
+
+              {/* 🔹 Date d'inscription formatée */}
+              <TableCell>
+                {taxpayer.createdAt ? new Date(taxpayer.createdAt).toLocaleDateString() : 'N/A'}
+              </TableCell>
+
+              {/* Actions */}
+              <TableCell
+                sx={{
+                  backgroundColor: '#f0f4f8',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-around',
+                  alignItems: 'center',
+                  p: 1,
+                }}
+              >
+                <IconButton
+                  sx={{
+                    color: '#007BFF',
+                    '&:hover': {
+                      color: '#0056b3',
+                      transform: 'scale(1.1)',
+                    },
+                  }}
+                  onClick={() => {
+                    console.log('Modifier', taxpayer);
+                  }}
+                >
+                  <EditIcon />
+                </IconButton>
+
+                <IconButton
+                  sx={{
+                    color: '#dc3545',
+                    '&:hover': {
+                      color: '#c82333',
+                      transform: 'scale(1.1)',
+                    },
+                  }}
+                  onClick={() => handleDeleteTaxpayer(taxpayer._id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-       
-          <TableBody>
-  {Array.isArray(taxpayers) && taxpayers.length > 0 ? (
-    taxpayers
-      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-      .map((taxpayer) => (
-        <TableRow key={taxpayer._id}>
-          {/* Nom du contribuable */}
-          <TableCell>{taxpayer.user?.name || 'N/A'}</TableCell>
-
-          {/* Téléphone */}
-          <TableCell>{taxpayer.user?.phone || 'N/A'}</TableCell>
-
-          {/* Adresse */}
-          <TableCell>{taxpayer.address}</TableCell>
-
-          {/* Zone */}
-          <TableCell>{taxpayer.zone?.name || 'N/A'}</TableCell>
-
-          {/* Actions */}
-          <TableCell
-            sx={{
-              backgroundColor: '#f0f4f8',
-              borderRadius: '8px',
-              display: 'flex',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-              p: 1,
-            }}
-          >
-            <IconButton
-              sx={{
-                color: '#007BFF',
-                '&:hover': {
-                  color: '#0056b3',
-                  transform: 'scale(1.1)',
-                },
-              }}
-              onClick={() => {
-                // Supposons que vous définissez une logique pour modifier
-                console.log('Modifier', taxpayer);
-              }}
-            >
-              <EditIcon />
-            </IconButton>
-
-            <IconButton
-              sx={{
-                color: '#dc3545',
-                '&:hover': {
-                  color: '#c82333',
-                  transform: 'scale(1.1)',
-                },
-              }}
-              onClick={() => handleDeleteTaxpayer(taxpayer._id)}
-            >
-              <DeleteIcon />
-            </IconButton>
+          ))
+      ) : (
+        <TableRow>
+          <TableCell colSpan={8} align="center">
+            Aucun contribuable trouvé.
           </TableCell>
         </TableRow>
-      ))
-  ) : (
-    <TableRow>
-      <TableCell colSpan={5} align="center">
-        Aucun contribuable trouvé.
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
+      )}
+    </TableBody>
+  </Table>
 
+  {/* Pagination */}
+  <TablePagination
+    rowsPerPageOptions={[5, 10, 25]}
+    component="div"
+    count={taxpayers.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handleChangePage}
+    onRowsPerPageChange={handleChangeRowsPerPage}
+  />
+</TableContainer>
 
-
-
-
-        </Table>
-
-
-        <TablePagination
-  rowsPerPageOptions={[5, 10, 25]}
-  component="div"
-  count={taxpayers.length}
-  rowsPerPage={rowsPerPage}
-  page={page}
-  onPageChange={handleChangePage}
-  onRowsPerPageChange={handleChangeRowsPerPage}
-/>
-
-      </TableContainer>
 
       {/* Modal pour Ajouter/Modifier un Contribuable */}
       <AddTaxpayerModal

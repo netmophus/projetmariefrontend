@@ -53,12 +53,14 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
   };
 
   // Met à jour taxSurfaces pour une taxe donnée
-  const handleSurfaceChange = (taxId, value) => {
-    setTaxSurfaces(prev => ({
-      ...prev,
-      [taxId]: value,
-    }));
-  };
+  // const handleSurfaceChange = (taxId, value) => {
+  //   setTaxSurfaces(prev => ({
+  //     ...prev,
+  //     [taxId]: value,
+  //   }));
+  // };
+
+
 
   // const handleSave = async () => {
   //   // Préparer le payload en envoyant les IDs des taxes et l'objet surfaces
@@ -66,7 +68,10 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
   //     taxes: selectedTaxes,
   //     surfaces: taxSurfaces,
   //   };
-
+  
+  //   // Log du payload envoyé
+  //   console.log("Payload envoyé pour l'association des taxes :", payload);
+  
   //   try {
   //     const response = await fetch(
   //       `${API_URL}/api/taxpayers/${taxpayer._id}/associate-taxes`,
@@ -79,63 +84,81 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
   //         body: JSON.stringify(payload),
   //       }
   //     );
-
+  
   //     if (!response.ok) {
   //       const errorData = await response.json();
+  //       console.error("Erreur lors de la réponse du serveur :", errorData);
   //       throw new Error(errorData.message || 'Erreur lors de l’association des taxes.');
   //     }
-
+  
+  //     const data = await response.json();
+  //     console.log("Réponse du serveur après association :", data);
+  
   //     alert('Taxes associées avec succès.');
   //     onClose();
   //     onSave(); // Rafraîchir la liste si nécessaire
   //   } catch (err) {
-  //     console.error('Erreur :', err.message);
+  //     console.error("Erreur dans handleSave :", err.message);
   //     alert(err.message);
   //   }
   // };
+  
 
 
-  const handleSave = async () => {
-    // Préparer le payload en envoyant les IDs des taxes et l'objet surfaces
-    const payload = {
-      taxes: selectedTaxes,
-      surfaces: taxSurfaces,
-    };
-  
-    // Log du payload envoyé
-    console.log("Payload envoyé pour l'association des taxes :", payload);
-  
-    try {
-      const response = await fetch(
-        `${API_URL}/api/taxpayers/${taxpayer._id}/associate-taxes`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Erreur lors de la réponse du serveur :", errorData);
-        throw new Error(errorData.message || 'Erreur lors de l’association des taxes.');
+const handleSave = async () => {
+  const payload = {
+    taxes: selectedTaxes,
+    surfaces: taxSurfaces,
+  };
+
+  // 🔍 Log avant l'envoi pour vérifier les données envoyées
+  console.log("✅ Surfaces avant envoi :", JSON.stringify(taxSurfaces, null, 2));
+  console.log("📤 Payload envoyé au serveur :", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/taxpayers/${taxpayer._id}/associate-taxes`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(payload),
       }
-  
-      const data = await response.json();
-      console.log("Réponse du serveur après association :", data);
-  
-      alert('Taxes associées avec succès.');
-      onClose();
-      onSave(); // Rafraîchir la liste si nécessaire
-    } catch (err) {
-      console.error("Erreur dans handleSave :", err.message);
-      alert(err.message);
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Erreur lors de la réponse du serveur :", errorData);
+      throw new Error(errorData.message || 'Erreur lors de l’association des taxes.');
     }
+
+    const data = await response.json();
+    console.log("✅ Réponse du serveur après association :", data);
+
+    alert('Taxes associées avec succès.');
+    onClose();
+    onSave();
+  } catch (err) {
+    console.error("❌ Erreur dans handleSave :", err.message);
+    alert(err.message);
+  }
+};
+
+  
+
+  const handleSurfaceChange = (taxId, newValue) => {
+    setTaxSurfaces((prev) => ({
+      ...prev,
+      [taxId]: {
+        ...prev[taxId],
+        ...newValue, // Ajoute ou met à jour les valeurs correctement
+      },
+    }));
   };
   
+
   return (
     <Dialog
       open={open}
@@ -200,13 +223,40 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
               <Typography variant="subtitle1">
                 Détails de la taxe : {taxDetail.name}
               </Typography>
+
+
+      {/* ✅ Taxe de Salubrité : Saisir le nombre de jours */}
+      {taxDetail.name === "Taxe de salubrité" && (
+        <TextField
+          fullWidth
+          label="Nombre de jours"
+          type="number"
+          margin="normal"
+          value={taxSurfaces[taxId]?.days || ''}
+          onChange={(e) =>
+            handleSurfaceChange(taxId, {
+              ...taxSurfaces[taxId],
+              days: parseInt(e.target.value, 10),
+            })
+          }
+          placeholder="Saisir le nombre de jours"
+          sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
+        />
+      )}
+
+
+
+
+
+
+
               <TextField
                 fullWidth
                 label="Tarif"
                 value={
                   taxDetail.isVariable
                     ? taxDetail.name === "Taxe d'occupation du domaine publique"
-                      ? `${taxDetail.supportRates.default} FCFA/m²`
+                      ? `${taxDetail.surfaceRates.default} FCFA/m²`
                       : // Pour la taxe de publicité, on affichera un message indiquant que l'option doit être choisie
                         "Sélectionnez l'option tarifaire et renseignez la surface"
                     : `${taxDetail.amount} FCFA`
@@ -228,61 +278,139 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
                 sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
               />
               {/* Pour la taxe d'occupation, afficher le champ de saisie de surface */}
-              {taxDetail.isVariable && taxDetail.name === "Taxe d'occupation du domaine publique" && (
+                   {/* ✅ Taxe d'Occupation du Domaine Public : Saisir la superficie */}
+      {taxDetail.name === "Taxe d'occupation du domaine public" && (
+        <TextField
+          fullWidth
+          label="Superficie (m²)"
+          type="number"
+          margin="normal"
+          value={taxSurfaces[taxId]?.surface || ''}
+          onChange={(e) =>
+            handleSurfaceChange(taxId, {
+              ...taxSurfaces[taxId],
+              surface: parseFloat(e.target.value),
+            })
+          }
+          placeholder="Saisir la superficie en m²"
+          sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
+        />
+      )}
+
+              {/* Pour la taxe de publicité, afficher la sélection d'option et la surface */}
+
+              {selectedTaxes.map((taxId, index) => {
+  const taxDetail = availableTaxes.find((tax) => tax._id === taxId);
+  if (!taxDetail) return null;
+
+  return (
+    <Box key={index} sx={{ mt: 2 }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+        {taxDetail.name}
+      </Typography>
+
+      {/* ✅ Tarif fixe pour les taxes non variables */}
+      {!taxDetail.isVariable && (
+        <TextField
+          fullWidth
+          label="Tarif"
+          value={`${taxDetail.amount} FCFA`}
+          disabled
+          margin="normal"
+          sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
+        />
+      )}
+
+      {/* ✅ Taxe de Publicité : Sélection des catégories */}
+      {taxDetail.isVariable && taxDetail.name === "Taxe de publicité" && (
+        <>
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Choisissez les types de publicité :
+          </Typography>
+
+          {/* ✅ Sélection multiple des catégories */}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Types de Publicité</InputLabel>
+            <Select
+              multiple
+              value={taxSurfaces[taxId]?.selectedCategories || []}
+              onChange={(e) =>
+                handleSurfaceChange(taxId, {
+                  ...taxSurfaces[taxId],
+                  selectedCategories: e.target.value,
+                })
+              }
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {taxDetail.surfaceRates.map((rate, idx) => (
+                <MenuItem key={idx} value={rate.category}>
+                  {rate.category} ({rate.ratePerSquareMeter} FCFA/m²)
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* ✅ Affichage des champs pour entrer la surface uniquement pour les catégories sélectionnées */}
+          {taxSurfaces[taxId]?.selectedCategories?.map((category, idx) => {
+            const rate = taxDetail.surfaceRates.find((r) => r.category === category);
+            return (
+              <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                <Typography sx={{ width: '200px' }}>
+                  {category} : {rate.ratePerSquareMeter} FCFA/m²
+                </Typography>
+
                 <TextField
-                  fullWidth
                   label="Surface (m²)"
                   type="number"
-                  margin="normal"
-                  value={taxSurfaces[taxId] || ''}
-                  onChange={(e) => handleSurfaceChange(taxId, parseFloat(e.target.value))}
-                  placeholder="Saisir la surface pour calculer le montant"
+                  value={(taxSurfaces[taxId]?.surfaces?.[category]) || ''}
+                  onChange={(e) =>
+                    handleSurfaceChange(taxId, {
+                      ...taxSurfaces[taxId],
+                      surfaces: {
+                        ...taxSurfaces[taxId]?.surfaces,
+                        [category]: parseFloat(e.target.value),
+                      },
+                    })
+                  }
                   sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
                 />
-              )}
-              {/* Pour la taxe de publicité, afficher la sélection d'option et la surface */}
-              {taxDetail.isVariable && taxDetail.name === "Taxe de publicité" && (
-                <Box>
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Choisir l'option de tarif</InputLabel>
-                    <Select
-                      value={(taxSurfaces[taxId] && taxSurfaces[taxId].option) || ''}
-                      onChange={(e) =>
-                        handleSurfaceChange(taxId, {
-                          ...taxSurfaces[taxId],
-                          option: e.target.value,
-                        })
-                      }
-                      label="Choisir l'option de tarif"
-                    >
-                      <MenuItem value="option1">
-                        Option 1: {taxDetail.supportRates.option1} FCFA/m²
-                      </MenuItem>
-                      <MenuItem value="option2">
-                        Option 2: {taxDetail.supportRates.option2} FCFA/m²
-                      </MenuItem>
-                      <MenuItem value="option3">
-                        Option 3: {taxDetail.supportRates.option3} FCFA/m²
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    label="Surface (m²)"
-                    type="number"
-                    margin="normal"
-                    value={(taxSurfaces[taxId] && taxSurfaces[taxId].surface) || ''}
-                    onChange={(e) =>
-                      handleSurfaceChange(taxId, {
-                        ...taxSurfaces[taxId],
-                        surface: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Saisir la surface"
-                    sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
-                  />
-                </Box>
-              )}
+              </Box>
+            );
+          })}
+        </>
+      )}
+    </Box>
+  );
+})}
+
+
+
+
+
+      {/* ✅ Taxe sur les Pompes à Hydrocarbures : Saisir le nombre de pistolets */}
+      {taxDetail.name === "Taxe sur les pompes à hydrocarbures et dépôts de colis" && (
+        <TextField
+          fullWidth
+          label="Nombre de pistolets"
+          type="number"
+          margin="normal"
+          value={taxSurfaces[taxId]?.pistols || ''}
+          onChange={(e) =>
+            handleSurfaceChange(taxId, {
+              ...taxSurfaces[taxId],
+              pistols: parseInt(e.target.value, 10),
+            })
+          }
+          placeholder="Saisir le nombre de pistolets"
+          sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
+        />
+      )}
+
+
+
+
+
+
             </Box>
           );
         })}

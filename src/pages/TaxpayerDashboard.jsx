@@ -1,105 +1,163 @@
+
 import React, { useEffect, useState } from 'react';
-import { Grid, Box, Typography, Paper, Avatar, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Grid, Box, Typography, Paper, Avatar, CircularProgress, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-
-
+import { useNavigate } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
+import PaymentReceiptPDF from '../components/PaymentReceiptPDF';
 
 function TaxpayerDashboard() {
-  // Exemple de données fictives
-
-
- 
+  // 📌 États pour les montants
   const [error, setError] = useState('');
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
- 
-  const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
+  const [totalDue, setTotalDue] = useState(0);
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [userInfo, setUserInfo] = useState({ name: '', phone: '' });
 
+  const API_URL = process.env.REACT_APP_API_URL;
+  const navigate = useNavigate();
 
-  
-
-// Fonction pour récupérer l'historique des paiements
-
-const fetchPaymentHistory = async () => {
-  console.log('Début de la récupération des paiements');
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch(`${API_URL}/api/taxpayers-dashboard/payment-history`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-
-    console.log('Réponse brute de l’API :', response);
-
-    if (!response.ok) {
-      console.error('Erreur dans la réponse HTTP :', response.status, response.statusText);
-      throw new Error(`Erreur lors de la récupération des paiements : ${response.status}`);
+  // 📌 Fonction pour récupérer les informations utilisateur
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/taxpayers-dashboard/user-info`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
+      setUserInfo({
+        name: data.name || 'Nom inconnu',
+        phone: data.phone || 'Téléphone inconnu'
+      });
+      console.log("📌 Informations du contribuable connecté :", data);
+    } catch (err) {
+      console.error("❌ Erreur lors de la récupération des informations utilisateur :", err.message);
     }
+  };
 
-    const data = await response.json();
-    console.log('Données récupérées :', data);
+  // 📌 Fonction pour récupérer le montant total payé
+  const fetchTotalPaid = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/taxpayers-dashboard/total-paid`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
+      console.log('💰 Réponse du backend pour totalPaid :', data);
+      setTotalPaid(data.totalPaid || 0);
+    } catch (err) {
+      console.error('❌ Erreur lors de la récupération du montant total payé :', err.message);
+      setTotalPaid(0);
+    }
+  };
 
-    setPayments(data.payments);
-  } catch (err) {
-    console.error('Erreur lors de la récupération des paiements :', err.message);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-    console.log('Fin de la récupération des paiements');
-  }
-};
+  // 📌 Fonction pour récupérer le montant total dû
+  const fetchTotalDue = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/taxpayers-dashboard/total-due`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
+      console.log('💰 Montant total dû récupéré :', data);
+      setTotalDue(data.totalDue || 0);
+    } catch (err) {
+      console.error('❌ Erreur lors de la récupération du montant total dû :', err.message);
+    }
+  };
+
+  // 📌 Fonction pour récupérer l'historique des paiements
+  const fetchPaymentHistory = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_URL}/api/taxpayers-dashboard/payment-history`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des paiements.');
+      }
+
+      const data = await response.json();
+      console.log('📋 Historique des paiements récupéré :', data);
+      setPayments(data.payments);
+    } catch (err) {
+      console.error('❌ Erreur lors de la récupération des paiements :', err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 📌 Charger toutes les données au chargement du composant
+  useEffect(() => {
+    fetchUserInfo();
+    fetchTotalPaid();
+    fetchTotalDue();
+    fetchPaymentHistory();
+  }, []);
+
+  // 🔄 Affichage des logs pour vérifier les valeurs
+  useEffect(() => {
+    console.log('🔄 Rechargement du composant avec totalPaid :', totalPaid);
+    console.log('🔄 Rechargement du composant avec totalDue :', totalDue);
+  }, [totalPaid, totalDue]);
 
 
-useEffect(() => {
-  fetchPaymentHistory(); // Récupérer l'historique des paiements au chargement
-}, []);
-
-
-
-
-
-
+    // 📥 Fonction pour télécharger le reçu en PDF
+    const handleDownloadReceipt = async (paymentId) => {
+      try {
+        const response = await fetch(`${API_URL}/api/payments/${paymentId}/receipt`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération du reçu.');
+        }
+  
+        const paymentDetails = await response.json();
+        console.log('📋 Détails du paiement pour le reçu :', paymentDetails);
+  
+        const blob = await pdf(
+          <PaymentReceiptPDF paymentDetails={paymentDetails} />
+        ).toBlob();
+  
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      } catch (err) {
+        console.error('❌ Erreur lors du téléchargement du reçu :', err.message);
+        alert('Erreur lors du téléchargement du reçu.');
+      }
+    };
 
   return (
-    <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' , mt:18,}}>
-      {/* Titre principal */}
+    <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh', mt: 18 }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Tableau de Bord Contribuable
+        Tableau de Bord Contribuable - {userInfo.name} / {userInfo.phone}
       </Typography>
-
-    
-
-
-
 
       <Typography variant="body1" color="textSecondary" sx={{ mb: 4 }}>
         Bienvenue, voici un aperçu de votre situation fiscale.
       </Typography>
 
-      {/* Section Vue d’Ensemble */}
       <Grid container spacing={3}>
+        {/* Montant Restant à Payer */}
         <Grid item xs={12} md={4}>
-          <Paper
-            elevation={3}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: '#1976d2',
-              color: 'white',
-            }}
-          >
+          <Paper elevation={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, borderRadius: 2, backgroundColor: '#1976d2', color: 'white' }}>
             <Box>
-              <Typography variant="h6">Montant Total Dû</Typography>
+              <Typography variant="h6">Montant Restant à Payer</Typography>
               <Typography variant="h4" fontWeight="bold">
-                25,000 FCFA
+                {(totalDue || 0).toLocaleString()} FCFA
               </Typography>
             </Box>
             <Avatar sx={{ bgcolor: 'white', color: '#1976d2' }}>
@@ -108,189 +166,164 @@ useEffect(() => {
           </Paper>
         </Grid>
 
+        {/* Montant Total Payé */}
         <Grid item xs={12} md={4}>
-          <Paper
-            elevation={3}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: '#4caf50',
-              color: 'white',
-            }}
-          >
+          <Paper elevation={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, borderRadius: 2, backgroundColor: '#4caf50', color: 'white' }}>
             <Box>
-              <Typography variant="h6">Montant Payé</Typography>
+              <Typography variant="h6">Montant Total Payé</Typography>
               <Typography variant="h4" fontWeight="bold">
-                15,000 FCFA
+                {(totalPaid || 0).toLocaleString()} FCFA
               </Typography>
             </Box>
             <Avatar sx={{ bgcolor: 'white', color: '#4caf50' }}>
-              <ReceiptIcon />
-            </Avatar>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper
-            elevation={3}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: '#ff9800',
-              color: 'white',
-            }}
-          >
-            <Box>
-              <Typography variant="h6">Prochaines Échéances</Typography>
-              <Typography variant="h4" fontWeight="bold">
-                10,000 FCFA
-              </Typography>
-            </Box>
-            <Avatar sx={{ bgcolor: 'white', color: '#ff9800' }}>
-              <NotificationsActiveIcon />
+              <MonetizationOnIcon />
             </Avatar>
           </Paper>
         </Grid>
       </Grid>
 
-   
+      {/* Historique des Paiements */}
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          Historique des Paiements
+        </Typography>
 
-{/* Section Historique des Paiements */}
-<Typography variant="h5" fontWeight="bold" sx={{ mt: 4, mb: 2 }}>
-  Historique des Paiements
-</Typography>
-
-{/* Message d'erreur */}
-{error && (
-  <Typography variant="body1" color="error" sx={{ mb: 3 }}>
-    {error}
-  </Typography>
-)}
-
-{/* Affichage des paiements */}
-<TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2 }}>
-  <Table>
-    <TableHead sx={{ backgroundColor: '#1976d2' }}>
-      <TableRow>
-        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
-        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Montant</TableCell>
-        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Description de la Taxe</TableCell>
-        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Collecteur</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {payments.length > 0 ? (
-        payments.map((payment, index) => (
-          <TableRow
-            key={payment._id}
-            sx={{
-              backgroundColor: index % 2 === 0 ? '#f5f5f5' : '#ffffff', // Couleur alternée des lignes
-              '&:hover': { backgroundColor: '#e3f2fd' }, // Couleur au survol
-            }}
-          >
-            <TableCell>{new Date(payment.paymentDate).toLocaleDateString()}</TableCell>
-            <TableCell>{payment.amount.toLocaleString()} FCFA</TableCell>
-            <TableCell>{payment.tax?.name || 'Non spécifiée'}</TableCell>
-            <TableCell>{payment.collector?.name || 'Non spécifié'}</TableCell>
-          </TableRow>
-        ))
-      ) : (
-        <TableRow>
-          <TableCell colSpan={4} align="center" sx={{ fontStyle: 'italic', color: 'gray' }}>
-            Aucun paiement trouvé.
-          </TableCell>
-        </TableRow>
-      )}
-    </TableBody>
-  </Table>
-</TableContainer>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        {loading ? (
+          <CircularProgress />
+        ) : error ? (
+          <Typography variant="body1" color="error">
+            {error}
+          </Typography>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#1976d2' }}>
+                <TableRow>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Date</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Montant Payé</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Taxe</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Collecteur</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {payments.map((payment, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{payment.amountPaid.toLocaleString()} FCFA</TableCell>
+                    <TableCell>{payment.tax?.name || 'Non spécifiée'}</TableCell>
+                    <TableCell>{payment.collector?.name || 'Non spécifié'}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => handleDownloadReceipt(payment._id)}
+                      >
+                        Télécharger le Reçu
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Box>
 
 
       {/* Actions Rapides */}
-      <Typography variant="h5" fontWeight="bold" sx={{ mt: 4, mb: 2 }}>
-        Actions Rapides
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              boxShadow: 3,
-              p: 2,
-              borderRadius: 2,
-              textAlign: 'center',
-              backgroundColor: '#fff',
-            }}
-          >
-            <Avatar
-              sx={{
-                bgcolor: '#1976d2',
-                mx: 'auto',
-                width: 60,
-                height: 60,
-                mb: 2,
-              }}
-            >
-              <MonetizationOnIcon />
-            </Avatar>
-            <Typography variant="h6">Payer Maintenant</Typography>
-            <Button variant="contained" color="primary" fullWidth>
-              Payer
-            </Button>
-          </Paper>
-        </Grid>
+<Typography variant="h5" fontWeight="bold" sx={{ mt: 4, mb: 2, ml:2 }}>
+  Actions Rapides
+</Typography>
+<Grid container spacing={3}>
+  {/* Paiement via NITA */}
+  <Grid item xs={12} md={4}>
+    <Paper
+      sx={{
+        boxShadow: 3,
+        p: 2,
+        borderRadius: 2,
+        textAlign: 'center',
+        backgroundColor: '#fff',
+      }}
+    >
+      <Avatar
+        sx={{
+          bgcolor: '#1976d2',
+          mx: 'auto',
+          width: 60,
+          height: 60,
+          mb: 2,
+        }}
+      >
+        <MonetizationOnIcon />
+      </Avatar>
+      <Typography variant="h6">Payer via NITA</Typography>
+      <Button variant="contained" color="primary" fullWidth>
+        Payer
+      </Button>
+    </Paper>
+  </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Paper
-            sx={{
-              boxShadow: 3,
-              p: 2,
-              borderRadius: 2,
-              textAlign: 'center',
-              backgroundColor: '#fff',
-            }}
-          >
-            <Avatar
-              sx={{
-                bgcolor: '#4caf50',
-                mx: 'auto',
-                width: 60,
-                height: 60,
-                mb: 2,
-              }}
-            >
-              <ReceiptIcon />
-            </Avatar>
-            <Typography variant="h6">Télécharger un Reçu</Typography>
-            <Button variant="contained" color="success" fullWidth>
-              Télécharger
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
+  {/* Paiement via ALIZZA */}
+  <Grid item xs={12} md={4}>
+    <Paper
+      sx={{
+        boxShadow: 3,
+        p: 2,
+        borderRadius: 2,
+        textAlign: 'center',
+        backgroundColor: '#fff',
+      }}
+    >
+      <Avatar
+        sx={{
+          bgcolor: '#1976d2',
+          mx: 'auto',
+          width: 60,
+          height: 60,
+          mb: 2,
+        }}
+      >
+        <MonetizationOnIcon />
+      </Avatar>
+      <Typography variant="h6">Payer via ALIZZA</Typography>
+      <Button variant="contained" color="primary" fullWidth>
+        Payer
+      </Button>
+    </Paper>
+  </Grid>
+
+  {/* Paiement via Banque */}
+  <Grid item xs={12} md={4}>
+    <Paper
+      sx={{
+        boxShadow: 3,
+        p: 2,
+        borderRadius: 2,
+        textAlign: 'center',
+        backgroundColor: '#fff',
+      }}
+    >
+      <Avatar
+        sx={{
+          bgcolor: '#1976d2',
+          mx: 'auto',
+          width: 60,
+          height: 60,
+          mb: 2,
+        }}
+      >
+        <MonetizationOnIcon />
+      </Avatar>
+      <Typography variant="h6">Payer Banque</Typography>
+      <Button variant="contained" color="primary" fullWidth>
+        Payer
+      </Button>
+    </Paper>
+  </Grid>
+</Grid>
+
     </Box>
   );
 }

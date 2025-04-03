@@ -1,119 +1,4 @@
 
-// import React, { useEffect, useState } from "react";
-// import {
-//   Box,
-//   Typography,
-//   CircularProgress,
-//   Paper,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-// } from "@mui/material";
-
-// const CollectorsReportPage = () => {
-//   const [reportData, setReportData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     fetch(`${process.env.REACT_APP_API_URL}/api/reports/collectors-activity`, {
-//       headers: {
-//         Authorization: `Bearer ${localStorage.getItem("token")}`,
-//       },
-//     })
-//       .then((response) => response.json())
-//       .then((data) => {
-//         setReportData(data);
-//         setLoading(false);
-//       })
-//       .catch((error) => {
-//         console.error("❌ Erreur lors de la récupération du rapport :", error);
-//         setLoading(false);
-//       });
-//   }, []);
-
-//   if (loading) {
-//     return (
-//       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-//         <CircularProgress />
-//       </Box>
-//     );
-//   }
-
-//   if (!reportData) {
-//     return (
-//       <Box sx={{ textAlign: "center", mt: 5 }}>
-//         <Typography variant="h6" color="error">Impossible de charger le rapport.</Typography>
-//       </Box>
-//     );
-//   }
-
-//   return (
-//     <Box sx={{ p: 4, mt: 20, backgroundColor: "#f5f5f5", minHeight: "100vh"}}>
-//       <Typography variant="h4" fontWeight="bold" gutterBottom>
-//         📄 Rapport d'Activité des Collecteurs
-//       </Typography>
-
-//       {reportData.map((collector, index) => (
-//         <Paper key={index} sx={{ p: 3, mb: 3 }}>
-//           <Typography variant="h6" sx={{ mb: 1, color: "#2a3eb1" }}>
-//             🧑 Collecteur : {collector.collecteur}
-//           </Typography>
-//           <Typography variant="body1">📞 Téléphone : {collector.telephone}</Typography>
-
-//           {Object.entries(collector.contribuablesParTaxeEtZone).map(([zoneName, taxes]) => (
-//             <Box key={zoneName} sx={{ mt: 2 }}>
-//               <Typography variant="h6" sx={{ mt: 2, mb: 1, color: "#4a90e2" }}>
-//                 🏙️ Zone : {zoneName}
-//               </Typography>
-
-//               {Object.entries(taxes).map(([taxName, taxpayers]) => (
-//                 <Box key={taxName} sx={{ mb: 2 }}>
-//                   <Typography variant="h6" sx={{ mt: 1, mb: 1, color: "#d32f2f" }}>
-//                     💰 Taxe : {taxName}
-//                   </Typography>
-
-//                   <TableContainer component={Paper} sx={{ mb: 3 }}>
-//                     <Table>
-//                       <TableHead sx={{ backgroundColor: "#4a90e2" }}>
-//                         <TableRow>
-//                           <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Nom</TableCell>
-//                           <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Téléphone</TableCell>
-//                           <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Adresse</TableCell>
-//                           <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Montant (FCFA)</TableCell>
-//                           <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Date de paiement</TableCell>
-//                         </TableRow>
-//                       </TableHead>
-//                       <TableBody>
-//                         {taxpayers.map((taxpayer, idx) => (
-//                           <TableRow key={idx}>
-//                             <TableCell>{taxpayer.name}</TableCell>
-//                             <TableCell>{taxpayer.phone}</TableCell>
-//                             <TableCell>{taxpayer.address}</TableCell>
-//                             <TableCell>{taxpayer.amountPaid}</TableCell>
-//                             <TableCell>{taxpayer.paymentDate}</TableCell>
-//                           </TableRow>
-//                         ))}
-//                       </TableBody>
-//                     </Table>
-//                   </TableContainer>
-//                 </Box>
-//               ))}
-//             </Box>
-//           ))}
-//         </Paper>
-//       ))}
-//     </Box>
-//   );
-// };
-
-// export default CollectorsReportPage;
-
-
-
-
 
 import React, { useEffect, useState } from "react";
 import {
@@ -417,49 +302,54 @@ const handleDownloadPDF = () => {
       </Button>
 
       {/* 🏛 Table des collecteurs */}
-      {reportData.map((collector, index) => (
-        <Box key={index} sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>🧑 Collecteur : {collector.collecteur}</Typography>
-          <Typography variant="body1">📞 Téléphone : {collector.telephone}</Typography>
+      {Array.isArray(reportData) && reportData.length > 0 ? (
+  reportData.map((collector, index) => (
+    <Box key={index} sx={{ mb: 4 }}>
+      <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>🧑 Collecteur : {collector.collecteur}</Typography>
+      <Typography variant="body1">📞 Téléphone : {collector.telephone}</Typography>
 
-          {Object.entries(collector.contribuablesParTaxeEtZone).map(([zoneName, taxes]) => (
-            <Box key={zoneName} sx={{ mt: 2 }}>
-              <Typography variant="h6" sx={{ color: "primary.main", fontWeight: "bold" }}>🏙️ Zone : {zoneName}</Typography>
+      {Object.entries(collector.contribuablesParTaxeEtZone).map(([zoneName, taxes]) => (
+        <Box key={zoneName} sx={{ mt: 2 }}>
+          <Typography variant="h6" sx={{ color: "primary.main", fontWeight: "bold" }}>🏙️ Zone : {zoneName}</Typography>
 
-              {Object.entries(taxes).map(([taxName, taxpayers]) => (
-                <Box key={taxName} sx={{ mt: 1 }}>
-                  <Typography variant="h6" sx={{ color: "secondary.main", fontWeight: "bold" }}>💰 Taxe : {taxName}</Typography>
+          {Object.entries(taxes).map(([taxName, taxpayers]) => (
+            <Box key={taxName} sx={{ mt: 1 }}>
+              <Typography variant="h6" sx={{ color: "secondary.main", fontWeight: "bold" }}>💰 Taxe : {taxName}</Typography>
 
-                  <TableContainer component={Paper} sx={{ mt: 2 }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-                          <TableCell><strong>Nom</strong></TableCell>
-                          <TableCell><strong>Téléphone</strong></TableCell>
-                          <TableCell><strong>Adresse</strong></TableCell>
-                          <TableCell align="right"><strong>Montant (FCFA)</strong></TableCell>
-                          <TableCell align="center"><strong>Date de paiement</strong></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {taxpayers.map((taxpayer, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>{taxpayer.name}</TableCell>
-                            <TableCell>{taxpayer.phone}</TableCell>
-                            <TableCell>{taxpayer.address}</TableCell>
-                            <TableCell align="right">{formatNumber(taxpayer.amountPaid)}</TableCell>
-                            <TableCell align="center">{taxpayer.paymentDate}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              ))}
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
+                      <TableCell><strong>Nom</strong></TableCell>
+                      <TableCell><strong>Téléphone</strong></TableCell>
+                      <TableCell><strong>Adresse</strong></TableCell>
+                      <TableCell align="right"><strong>Montant (FCFA)</strong></TableCell>
+                      <TableCell align="center"><strong>Date de paiement</strong></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {taxpayers.map((taxpayer, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{taxpayer.name}</TableCell>
+                        <TableCell>{taxpayer.phone}</TableCell>
+                        <TableCell>{taxpayer.address}</TableCell>
+                        <TableCell align="right">{formatNumber(taxpayer.amountPaid)}</TableCell>
+                        <TableCell align="center">{taxpayer.paymentDate}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Box>
           ))}
         </Box>
       ))}
+    </Box>
+  ))
+) : (
+  <Typography variant="h6" color="error">Aucune donnée disponible.</Typography>
+)}
+
     </Box>
   );
 };

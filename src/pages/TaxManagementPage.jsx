@@ -219,38 +219,49 @@ function TaxManagementPage() {
           >
             <TableCell>{tax.name}</TableCell>
             <TableCell>{tax.description}</TableCell>
-            {/* <TableCell>
-              {tax.isVariable && tax.supportRates
-                ? `${tax.supportRates.default} FCFA/m²`
-                : `${tax.amount} FCFA`}
-            </TableCell> */}
-
+  
+{/* 
+<TableCell>
+  {tax.isVariable ? (
+    tax.surfaceRates && tax.surfaceRates.length > 0 ? (
+      tax.surfaceRates.map((rate, index) => (
+        <Typography key={index} variant="body2">
+          {rate.category} :
+          {rate.ratePerSquareMeter != null
+            ? ` ${rate.ratePerSquareMeter.toLocaleString("fr-FR")} FCFA/m²`
+            : " Tarif non défini"}
+        </Typography>
+      ))
+    ) : (
+      "Tarif non défini"
+    )
+  ) : (
+    `${tax.amount != null ? tax.amount.toLocaleString("fr-FR") + " FCFA" : "Montant non défini"}`
+  )}
+</TableCell> */}
 
 <TableCell>
   {tax.isVariable ? (
-    tax.name === "Taxe de publicité" ? (
-      <Box>
-        <Typography variant="body2">
-          Option 1: {tax.supportRates.option1} FCFA/m²
+    tax.name === "Taxe de salubrité" ? (
+      "1000 FCFA / jour"
+    ) : tax.name === "Taxe sur les pompes à hydrocarbures et dépôts de colis" ? (
+      "35 000 FCFA / pistolet"
+    ) : tax.surfaceRates && tax.surfaceRates.length > 0 ? (
+      tax.surfaceRates.map((rate, index) => (
+        <Typography key={index} variant="body2">
+          {rate.category} :
+          {rate.ratePerSquareMeter != null
+            ? ` ${rate.ratePerSquareMeter.toLocaleString("fr-FR")} FCFA/m²`
+            : " Tarif non défini"}
         </Typography>
-        <Typography variant="body2">
-          Option 2: {tax.supportRates.option2} FCFA/m²
-        </Typography>
-        <Typography variant="body2">
-          Option 3: {tax.supportRates.option3} FCFA/m²
-        </Typography>
-      </Box>
+      ))
     ) : (
-      // Pour la taxe d'occupation du domaine publique, on affiche le taux unique
-      `${tax.supportRates.default} FCFA/m²`
+      "Tarif non défini"
     )
   ) : (
-    `${tax.amount} FCFA`
+    `${tax.amount != null ? tax.amount.toLocaleString("fr-FR") + " FCFA" : "Montant non défini"}`
   )}
 </TableCell>
-
-
-
 
 
             <TableCell>{tax.frequency === 'monthly' ? 'Mensuel' : 'Annuel'}</TableCell>

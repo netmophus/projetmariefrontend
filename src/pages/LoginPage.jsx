@@ -9,10 +9,14 @@ import {
   CardContent,
   CircularProgress,
   Grid,
+  IconButton,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { InputAdornment } from '@mui/material';
+
 
 function LoginPage() {
   const [phone, setPhone] = useState('');
@@ -22,34 +26,41 @@ function LoginPage() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
+  const [showPassword, setShowPassword] = useState(false);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+  
     if (!phone || !password) {
       setError('Veuillez remplir tous les champs.');
       return;
     }
-
+  
+    // ✅ Ajouter automatiquement +227 si ça n'existe pas déjà
+    const formattedPhone = phone.startsWith('+227') ? phone : `+227${phone}`;
+  
     setLoading(true); // Activer l'indicateur de chargement
-
+  
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone: formattedPhone, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.message || 'Erreur de connexion');
       }
-
+  
       login(data.user, data.token);
-
+  
       // Redirection basée sur le rôle
       if (data.user.role === 'admin') {
         navigate('/admin-dashboard');
@@ -64,7 +75,7 @@ function LoginPage() {
       setLoading(false); // Désactiver l'indicateur de chargement
     }
   };
-
+  
   return (
     <Box
       sx={{
@@ -113,30 +124,59 @@ function LoginPage() {
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="phone"
-              label="Numéro de Téléphone"
-              name="phone"
-              autoComplete="tel"
-              autoFocus
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Mot de Passe"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+    
+          <TextField
+  margin="normal"
+  required
+  fullWidth
+  id="phone"
+  label="Numéro de Téléphone"
+  name="phone"
+  autoComplete="tel"
+  value={phone}
+  onChange={(e) => {
+    // Empêche la saisie de caractères non numériques et limite à 8 chiffres
+    const numericValue = e.target.value.replace(/\D/g, '').slice(0, 8);
+    setPhone(numericValue);
+  }}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        +227
+      </InputAdornment>
+    ),
+  }}
+/>
+
+
+
+<TextField
+  margin="normal"
+  required
+  fullWidth
+  name="password"
+  label="Mot de Passe"
+  type={showPassword ? "text" : "password"} // Affiche le mot de passe en texte clair ou masqué
+  id="password"
+  autoComplete="current-password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  InputProps={{
+    endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          onClick={() => setShowPassword(!showPassword)}
+          edge="end"
+          aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        >
+          {showPassword ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
+      </InputAdornment>
+    ),
+  }}
+/>
+
+
             {error && (
               <Typography variant="body2" color="error" sx={{ mt: 1, textAlign: 'center' }}>
                 {error}
@@ -160,7 +200,7 @@ function LoginPage() {
             </Button>
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Typography
+                {/* <Typography
                   component="a"
                   href="/register"
                   sx={{
@@ -173,9 +213,30 @@ function LoginPage() {
                   }}
                 >
                   Créer un compte
-                </Typography>
+                </Typography> */}
               </Grid>
             </Grid>
+
+            <Grid container justifyContent="flex-end">
+  <Grid item>
+    <Typography
+      component="a"
+      onClick={() => navigate('/forgot-password')}
+      sx={{
+        color: 'primary.main',
+        textDecoration: 'none',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        '&:hover': {
+          textDecoration: 'underline',
+        },
+      }}
+    >
+      Mot de passe oublié ?
+    </Typography>
+  </Grid>
+</Grid>
+
           </Box>
         </CardContent>
       </Card>

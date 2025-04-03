@@ -22,6 +22,24 @@ const UserManagementPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const API_URL = process.env.REACT_APP_API_URL;
 
+  // const fetchUsers = async () => {
+  //   try {
+  //     const response = await fetch(`${API_URL}/api/users?search=${search}&page=${page}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem('token')}`,
+  //       },
+  //     });
+
+  //     const data = await response.json();
+  //     setUsers(data.users);
+  //     setTotalPages(data.totalPages);
+  //   } catch (err) {
+  //     console.error('❌ Erreur lors de la récupération des utilisateurs :', err.message);
+  //   }
+  // };
+
+
+
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${API_URL}/api/users?search=${search}&page=${page}`, {
@@ -29,15 +47,16 @@ const UserManagementPage = () => {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-
+  
       const data = await response.json();
-      setUsers(data.users);
-      setTotalPages(data.totalPages);
+      console.log('✅ Données reçues du backend :', data); // 👈 Ajoutez cette ligne pour vérifier la structure
+      setUsers(data.users || []); // Si data.users est undefined, utilise un tableau vide
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error('❌ Erreur lors de la récupération des utilisateurs :', err.message);
     }
   };
-
+  
   useEffect(() => {
     fetchUsers();
   }, [search, page]);
@@ -50,17 +69,17 @@ const UserManagementPage = () => {
     fetchUsers();
   };
 
-  const handleChangeRole = async (id, role) => {
-    await fetch(`${API_URL}/api/users/${id}/role`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({ role }),
-    });
-    fetchUsers();
-  };
+  // const handleChangeRole = async (id, role) => {
+  //   await fetch(`${API_URL}/api/users/${id}/role`, {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${localStorage.getItem('token')}`,
+  //     },
+  //     body: JSON.stringify({ role }),
+  //   });
+  //   fetchUsers();
+  // };
 
   return (
     <Box sx={{ p: 3, mt: 20, backgroundColor: '#f7f9fc', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
@@ -88,29 +107,42 @@ const UserManagementPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell>
-                  <Select
-                    value={user.role}
-                    onChange={(e) => handleChangeRole(user._id, e.target.value)}
-                  >
-                    <MenuItem value="admin">Admin</MenuItem>
-                    <MenuItem value="collector">Collecteur</MenuItem>
-                    <MenuItem value="contribuable">Contribuable</MenuItem>
-                  </Select>
-                </TableCell>
-                <TableCell>{user.status === 'active' ? '✅ Actif' : '❌ Inactif'}</TableCell>
-                <TableCell>
-                  <Button variant="contained" onClick={() => handleToggleStatus(user._id)}>
-                    {user.status === 'active' ? 'Désactiver' : 'Activer'}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {Array.isArray(users) && users.length > 0 ? (
+    users.map((user) => (
+      <TableRow key={user._id}>
+        <TableCell>{user.name}</TableCell>
+        <TableCell>{user.phone}</TableCell>
+        <TableCell>
+          <Select
+            value={user.role}
+            disabled
+            sx={{
+              backgroundColor: '#f0f0f0',
+              color: '#777',
+            }}
+          >
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="collector">Collecteur</MenuItem>
+            <MenuItem value="contribuable">Contribuable</MenuItem>
+          </Select>
+        </TableCell>
+        <TableCell>{user.status === 'active' ? '✅ Actif' : '❌ Inactif'}</TableCell>
+        <TableCell>
+          <Button variant="contained" onClick={() => handleToggleStatus(user._id)}>
+            {user.status === 'active' ? 'Désactiver' : 'Activer'}
+          </Button>
+        </TableCell>
+      </TableRow>
+    ))
+  ) : (
+    <TableRow>
+      <TableCell colSpan={5} align="center">
+        Aucun utilisateur trouvé.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
         </Table>
       </TableContainer>
     </Box>

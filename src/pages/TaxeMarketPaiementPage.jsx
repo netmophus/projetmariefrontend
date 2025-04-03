@@ -26,76 +26,97 @@ const TaxeMarketPaiementPage = () => {
 
 
 
+// Fonction pour récupérer les reçus activés pour le collecteur connecté
+// Fonction pour récupérer les reçus activés pour le collecteur connecté et le marché sélectionné
+const fetchActiveReceipts = async () => {
+  try {
+    console.log("📥 Chargement des reçus activés pour le marché :", marketId);
 
-  // Fonction pour récupérer les reçus activés
-  const fetchActiveReceipts = async () => {
-    try {
-      console.log("📥 Marché sélectionné avec ID :", marketId);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("⚠️ Aucun token trouvé dans le stockage local.");
+      alert("Veuillez vous connecter.");
+      return;
+    }
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("⚠️ Aucun token trouvé dans le stockage local.");
-        alert("Veuillez vous connecter.");
-        return;
+    // 🔥 Utilisation du nouveau endpoint pour le collecteur connecté et le marché sélectionné
+    const response = await axios.get(
+      `${API_URL}/api/receipt-batches/${marketId}/activated-collector`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
+    );
 
-      console.log("🔍 Envoi de la requête pour les reçus activés...");
-      const response = await axios.get(
-        `${API_URL}/api/receipt-batches/${marketId}/activated`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+    console.log("✅ Réponse API reçue :", response.data);
+
+    if (response.data && response.data.activeReceipts) {
+      console.log("📋 Reçus activés :", response.data.activeReceipts);
+      setActiveReceipts(response.data.activeReceipts);
+
+      // Passer au premier reçu activé
+      const firstActivatedIndex = response.data.activeReceipts.findIndex((receipt) =>
+        receipt.confirmationCodes.some((code) => code.status === "Activated")
       );
 
-      console.log("✅ Réponse API reçue :", response.data);
-
-      if (response.data && response.data.receipts) {
-        console.log("📋 Reçus activés :", response.data.receipts);
-        setActiveReceipts(response.data.receipts);
-
-        // Passer au premier reçu activé
-        const firstActivatedIndex = response.data.receipts.findIndex((receipt) =>
-          receipt.confirmationCodes.some((code) => code.status === "Activated")
-        );
-
-        if (firstActivatedIndex !== -1) {
-          setCurrentReceiptIndex(firstActivatedIndex);
-        }
-      } else {
-        console.warn("⚠️ Aucune donnée de reçus activés trouvée.");
-        setActiveReceipts([]);
+      if (firstActivatedIndex !== -1) {
+        setCurrentReceiptIndex(firstActivatedIndex);
       }
-    } catch (error) {
-      console.error("❌ Erreur lors de la récupération des reçus activés :", error.message);
-      alert("Impossible de récupérer les reçus activés.");
-    } finally {
-      setLoading(false);
+    } else {
+      console.warn("⚠️ Aucune donnée de reçus activés trouvée.");
+      setActiveReceipts([]);
     }
-  };
+  } catch (error) {
+    console.error("❌ Erreur lors de la récupération des reçus activés :", error.message);
+    alert("Impossible de récupérer les reçus activés.");
+  } finally {
+    setLoading(false);
+  }
+};
 
+// Charger les reçus activés au montage du composant
+useEffect(() => {
+  fetchActiveReceipts();
+}, [marketId]);
 
-
-
-
-  // Charger les reçus activés au montage du composant
-  useEffect(() => {
-    fetchActiveReceipts();
-  }, [marketId]);
 
   // Fonction pour valider le code de confirmation
-  const handleValidateCode = () => {
-    const currentConfirmationCode = currentReceipt.confirmationCodes[currentReceiptIndex];
+  // const handleValidateCode = () => {
+  //   const currentConfirmationCode = currentReceipt.confirmationCodes[currentReceiptIndex];
 
-    if (!currentConfirmationCode) {
+  //   if (!currentConfirmationCode) {
+  //     console.error("❌ Code de confirmation introuvable pour ce reçu.");
+  //     alert("Code de confirmation introuvable pour ce reçu.");
+  //     return;
+  //   }
+
+  //   console.log("🔍 Code saisi :", confirmationCode);
+  //   console.log("✅ Code attendu :", currentConfirmationCode.code);
+
+  //   if (confirmationCode === currentConfirmationCode.code) {
+  //     console.log("🎉 Code de confirmation validé !");
+  //     setIsValidCode(true);
+  //     setSuccessMessage("Code validé avec succès !");
+  //   } else {
+  //     console.warn("⚠️ Code de confirmation incorrect.");
+  //     alert("Code de confirmation incorrect. Veuillez réessayer.");
+  //     setIsValidCode(false);
+  //   }
+  // };
+
+
+  const handleValidateCode = () => {
+    if (!currentReceipt || !currentReceipt.confirmationCodes || !currentReceipt.confirmationCodes[currentReceiptIndex]) {
       console.error("❌ Code de confirmation introuvable pour ce reçu.");
       alert("Code de confirmation introuvable pour ce reçu.");
       return;
     }
-
+  
+    const currentConfirmationCode = currentReceipt.confirmationCodes[currentReceiptIndex].code;
+  
     console.log("🔍 Code saisi :", confirmationCode);
-    console.log("✅ Code attendu :", currentConfirmationCode.code);
-
-    if (confirmationCode === currentConfirmationCode.code) {
+    console.log("✅ Code attendu :", currentConfirmationCode);
+  
+    if (confirmationCode === currentConfirmationCode) {
       console.log("🎉 Code de confirmation validé !");
       setIsValidCode(true);
       setSuccessMessage("Code validé avec succès !");
@@ -105,6 +126,7 @@ const TaxeMarketPaiementPage = () => {
       setIsValidCode(false);
     }
   };
+  
 
   // Fonction pour soumettre le paiement
 
@@ -130,9 +152,17 @@ const handlePaymentSubmit = async () => {
     return;
   }
 
+
+  
+
   const currentReceipt = activeReceipts[currentReceiptIndex];
   console.log(`Reçu actuel [Index ${currentReceiptIndex}]:`, currentReceipt);
-
+  if (!currentReceipt || !currentReceipt.confirmationCodes || !currentReceipt.confirmationCodes[currentReceiptIndex]) {
+    console.error("Données invalides pour currentReceipt ou confirmationCodes.");
+    alert("Une erreur est survenue. Veuillez vérifier vos données.");
+    return;
+  }
+  
   // Validation des données du reçu
   if (
     !currentReceipt ||
@@ -291,8 +321,12 @@ useEffect(() => {
               Marché : {currentReceipt.market.name}
             </Typography>
             <Typography variant="body1">
-              Numéro de reçu : {currentReceipt.confirmationCodes[currentReceiptIndex].receipt}
+              Numéro de reçu :
+              {currentReceipt && currentReceipt.confirmationCodes && currentReceipt.confirmationCodes[currentReceiptIndex]
+                ? currentReceipt.confirmationCodes[currentReceiptIndex].receipt
+                : "Aucun reçu disponible"}
             </Typography>
+
             <Typography variant="body1">
               Montant attendu : {currentReceipt.amount || "500 FCFA"}
             </Typography>

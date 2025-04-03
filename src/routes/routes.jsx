@@ -36,9 +36,15 @@ import TransactionsReportPage from '../pages/TransactionsReportPage';
 import ReceiptsReportPage from '../pages/ReceiptsReportPage';
 
 import ReceiptPaymentsPage from '../pages/ReceiptPaymentsPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
+import PaymentReceiptPage from '../pages/PaymentReceiptPage';
+import MarketReportingPage from '../pages/MarketReportingPage';
 
+import TaxAssessmentsPage from '../pages/TaxAssessmentsPage';
 
-
+import DissociateTaxesPage from '../pages/DissociateTaxesPage';
+import UnpaidManagementPage from '../pages/UnpaidManagementPage';
 //import PaymentConfirmation from "../components/PaymentConfirmation";
 // Définir une route protégée
 const ProtectedRoute = ({ role, children }) => {
@@ -57,6 +63,9 @@ const AppRoutes = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
 
       {/* Routes protégées */}
       <Route
@@ -164,6 +173,18 @@ const AppRoutes = () => {
 />
 
 
+
+<Route
+  path="/admin/dissociate-taxes"
+  element={
+    <ProtectedRoute role="admin">
+      <DissociateTaxesPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
  <Route
   path="/collector/payments"
   element={
@@ -207,6 +228,14 @@ const AppRoutes = () => {
   }
 />
 
+<Route
+  path="/collector/tax-assessments"
+  element={
+    <ProtectedRoute role="collector">
+      <TaxAssessmentsPage />
+    </ProtectedRoute>
+  }
+/>
 
 
 
@@ -373,6 +402,33 @@ const AppRoutes = () => {
 />
 
 
+
+<Route
+  path="/taxpayer/receipt/:paymentId"
+  element={
+    <ProtectedRoute role="contribuable">
+      <PaymentReceiptPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/marketreporting/:marketId"
+  element={
+    <ProtectedRoute role="admin">
+      <MarketReportingPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/collector/unpaid-payments"
+  element={
+    <ProtectedRoute role="collector">
+      <UnpaidManagementPage />
+    </ProtectedRoute>
+  }
+/>
 
 
     </Routes>

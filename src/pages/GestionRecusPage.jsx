@@ -54,7 +54,8 @@ const fetchMarkets = async () => {
         id: market._id,
         name: market.name,
         location: market.location || "Non spécifiée",
-        collector: market.collector?.name || "Collecteur inconnu",
+        collector: market.collector && market.collector.name ? market.collector.name : "Collecteur inconnu",
+
       }));
       setMarkets(markets); // Mets à jour l'état des marchés
     }
@@ -68,6 +69,7 @@ const fetchMarkets = async () => {
 useEffect(() => {
   fetchMarkets();
 }, []);
+
 
 
 
@@ -93,20 +95,26 @@ const fetchReceiptBatches = async () => {
     if (response.status === 200) {
       console.log("📥 Lots de reçus récupérés bruts :", response.data);
 
-      // Inclure les données nécessaires dans chaque lot
-      const batches = response.data.map((batch) => ({
-        id: batch._id,
-        startReceipt: batch.startReceipt,
-        endReceipt: batch.endReceipt,
-        status: batch.status,
-        marketName: batch.market?.name || "Nom de marché manquant",
-        communeName: batch.market?.location || "Localisation inconnue",
-        collectorName: batch.collector?.name || "Collecteur inconnu",
-        confirmationCodes: batch.confirmationCodes || [], // Si disponible
-      }));
+      // Transformation et Filtrage des reçus
+      const batches = response.data
+        .map((batch) => ({
+          id: batch._id,
+          startReceipt: batch.startReceipt,
+          endReceipt: batch.endReceipt,
+          status: batch.status,
+          marketName: batch.market?.name || "Nom de marché manquant",
+          communeName: batch.market?.location || "Localisation inconnue",
+          collectorName: batch.collector?.name || "Collecteur inconnu",
+          confirmationCodes: batch.confirmationCodes || [],
+        }))
+        .filter(batch => batch.confirmationCodes.some(code => code.status === "Generated" || code.status === "Activated")); // 🔥 Filtrer par statut
 
       // Vérification des données après transformation
-      console.log("🔹 Données formatées :", batches);
+      console.log("🔹 Données formatées et filtrées :", batches);
+
+      // if (batches.length === 0) {
+      //   alert("Aucun reçu disponible. Tous les reçus ont peut-être été utilisés.");
+      // }
 
       // Mise à jour des reçus
       setReceiptBatches(batches);

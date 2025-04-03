@@ -14,7 +14,7 @@ import { pdf } from '@react-pdf/renderer';
 import PaymentReceiptPDF from './PaymentReceiptPDF'; // Votre composant de reçu PDF
 
 
-function AddPaymentModal({ open, onClose, onSave }) {
+function AddPaymentModal({ open, onClose, onSave, selectedPayment }) {
   const [formData, setFormData] = useState({
     taxpayerId: '',
     taxId: '',
@@ -64,6 +64,8 @@ function AddPaymentModal({ open, onClose, onSave }) {
       console.error('Erreur lors de la récupération des taxes :', err.message);
     }
   };
+
+
 
   // Charger les contribuables et les taxes lors de l'ouverture du modal
   useEffect(() => {

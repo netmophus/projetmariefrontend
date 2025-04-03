@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   Avatar,
+  CardActions,
   CircularProgress,
   Divider,
   Button,
@@ -22,29 +23,75 @@ const AdminStatDetailsCardPage = () => {
   const [marketStats, setMarketStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generatedReceipts, setGeneratedReceipts] = useState(0);
+  const [collectors, setCollectors] = useState([]); // ✅ Stocker les collecteurs
 
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
 
   // Fonction pour récupérer les statistiques détaillées du marché
-  const fetchMarketStats = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-       `${API_URL}/api/admin/markets/stats/${marketId}`,        
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("📊 Données reçues :", response.data);
-      setMarketStats(response.data);
-    } catch (error) {
-      console.error("❌ Erreur API :", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchMarketStats = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await axios.get(
+  //      `${API_URL}/api/admin/markets/stats/${marketId}`,        
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     console.log("📊 Données reçues :", response.data);
+  //     setMarketStats(response.data);
+  //   } catch (error) {
+  //     console.error("❌ Erreur API :", error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
+// Fonction pour récupérer les statistiques détaillées du marché
+const fetchMarketStats = async () => {
+  try {
+    console.log("📥 Récupération des statistiques du marché...");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Aucun token trouvé. Veuillez vous connecter.");
+      alert("Non autorisé. Veuillez vous connecter.");
+      return;
+    }
+
+    // 🔥 Envoi de la requête à l'API
+    const response = await axios.get(
+      `${API_URL}/api/admin/markets/stats/${marketId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    console.log("✅ Réponse API reçue :", response.data);
+
+    // Mettre à jour les statistiques générales du marché
+    setMarketStats(response.data);
+
+    // 🔍 Vérification des collecteurs associés
+    if (Array.isArray(response.data.collector)) {
+      console.log("📋 Liste des collecteurs associés :", response.data.collector);
+      setCollectors(response.data.collector); // ✅ Met à jour les collecteurs
+    } else if (response.data.collector) {
+      console.warn("⚠️ Le champ `collector` n'est pas un tableau. Conversion en tableau.");
+      setCollectors([response.data.collector]); // ✅ Transforme en tableau s'il est unique
+    } else {
+      console.warn("⚠️ Aucun collecteur trouvé dans la réponse API.");
+      setCollectors([]); // ✅ Assure que c'est un tableau vide pour éviter les erreurs
+    }
+  } catch (error) {
+    console.error("❌ Erreur lors de la récupération des statistiques :", error.message);
+    alert("Erreur lors de la récupération des statistiques du marché.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  
   useEffect(() => {
     fetchMarketStats();
   }, [marketId]);
@@ -284,33 +331,71 @@ const AdminStatDetailsCardPage = () => {
           </Card>
         </Grid>
 
+
+        {/* Reporting */} 
+       
+  <Grid item xs={12} md={4}>
+  <Card 
+    onClick={() => navigate(`/admin/marketreporting/${marketId}`)}
+    sx={{ backgroundColor: "#e8eaf6", textAlign: "center", cursor: "pointer" }}
+  >
+    <CardContent>
+      <Avatar
+        sx={{
+          bgcolor: "#3f51b5",
+          width: 56,
+          height: 56,
+          mx: "auto",
+          mb: 2,
+        }}
+      >
+        <ReceiptIcon />
+      </Avatar>
+      <Typography variant="h6" fontWeight="bold">
+        Reporting
+      </Typography>
+      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+        Voir les rapports de collecte
+      </Typography>
+    </CardContent>
+  </Card>
+</Grid>
+
+
         {/* Collector Information */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ backgroundColor: "#ede7f6", textAlign: "center" }}>
-            <CardContent>
-              <Avatar
-                sx={{
-                  bgcolor: "#512da8",
-                  width: 56,
-                  height: 56,
-                  mx: "auto",
-                  mb: 2,
-                }}
-              >
-                <PersonIcon />
-              </Avatar>
-              <Typography variant="h6" fontWeight="bold">
-                Collecteur
-              </Typography>
-              <Typography variant="h5" fontWeight="bold" sx={{ mt: 1 }}>
-                {collector.name}
-              </Typography>
-              <Typography variant="body1" color="textSecondary">
-                Contact : {collector.phone}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+    {/* ✅ Nouvelle section pour afficher tous les collecteurs associés au marché */}
+<Grid item xs={12} md={6}>
+  <Card sx={{ backgroundColor: "#ede7f6", textAlign: "center", p: 2 }}>
+    <CardContent>
+      <Avatar
+        sx={{
+          bgcolor: "#512da8",
+          width: 56,
+          height: 56,
+          mx: "auto",
+          mb: 2,
+        }}
+      >
+        <PersonIcon />
+      </Avatar>
+      <Typography variant="h6" fontWeight="bold">
+        Collecteurs Associés
+      </Typography>
+      {collectors.length > 0 ? (
+        collectors.map((collector, index) => (
+          <Typography key={index} variant="body1" sx={{ mt: 1 }}>
+            {collector.name} - 📞 {collector.phone}
+          </Typography>
+        ))
+      ) : (
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+          Aucun collecteur assigné.
+        </Typography>
+      )}
+    </CardContent>
+  </Card>
+</Grid>
+
 
         {/* Last Payment Date */}
         <Grid item xs={12}>
@@ -323,6 +408,20 @@ const AdminStatDetailsCardPage = () => {
             </Typography>
           </Paper>
         </Grid>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       </Grid>
 
       <Divider sx={{ my: 4 }} />

@@ -28,9 +28,27 @@ const ReceiptGeneratePage = () => {
   const [endReceipt, setEndReceipt] = useState(""); // Fin du reçu
   const [isFormVisible, setIsFormVisible] = useState(false); // Contrôle de la visibilité du formulaire
   const [selectedBatch, setSelectedBatch] = useState(null); // Lot de reçus sélectionné
-    const navigate = useNavigate();
+    
+  const [selectedCollector, setSelectedCollector] = useState(""); // Collecteur sélectionné
+const [availableCollectors, setAvailableCollectors] = useState([]); // Collecteurs disponibles pour le marché
+
+  
+  const navigate = useNavigate();
     const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
 
+
+    const handleMarketChange = (e) => {
+      const marketId = e.target.value;
+      setSelectedMarket(marketId);
+      setSelectedCollector(""); // Réinitialiser le collecteur sélectionné
+    
+      // Trouver le marché sélectionné
+      const market = markets.find((m) => m._id === marketId);
+    
+      // Mettre à jour les collecteurs disponibles pour ce marché
+      setAvailableCollectors(market?.collector || []);
+    };
+    
   // Fonction pour récupérer les marchés
   const fetchMarkets = async () => {
     try {
@@ -62,29 +80,55 @@ const ReceiptGeneratePage = () => {
   
 
   // Fonction pour générer des reçus
+  // const handleGenerateReceipts = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await axios.post(
+  //       `${API_URL}/api/receipt-batches`,
+  //       { market: selectedMarket, startReceipt, endReceipt },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+  //     alert("Reçus générés avec succès !");
+  //     // Recharger les données depuis l'API
+  //     await fetchReceiptBatches();
+  //     // Réinitialiser les champs du formulaire
+  //     setSelectedMarket("");
+  //     setStartReceipt("");
+  //     setEndReceipt("");
+  //     setIsFormVisible(false); // Cache le formulaire après l'ajout
+  //   } catch (error) {
+  //     console.error("Erreur lors de la génération des reçus :", error.message);
+  //     alert("Erreur lors de la génération des reçus.");
+  //   }
+  // };
+  
   const handleGenerateReceipts = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${API_URL}/api/receipt-batches`,
-        { market: selectedMarket, startReceipt, endReceipt },
+        { 
+          market: selectedMarket,
+          collector: selectedCollector, // 🔥 Ajouter le collecteur sélectionné
+          startReceipt,
+          endReceipt 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert("Reçus générés avec succès !");
-      // Recharger les données depuis l'API
-      await fetchReceiptBatches();
-      // Réinitialiser les champs du formulaire
+      await fetchReceiptBatches(); // Recharger les reçus
       setSelectedMarket("");
+      setSelectedCollector(""); // 🔥 Réinitialiser le collecteur
       setStartReceipt("");
       setEndReceipt("");
-      setIsFormVisible(false); // Cache le formulaire après l'ajout
+      setIsFormVisible(false);
     } catch (error) {
       console.error("Erreur lors de la génération des reçus :", error.message);
       alert("Erreur lors de la génération des reçus.");
     }
   };
-  
   
 
   useEffect(() => {
@@ -178,21 +222,38 @@ const ReceiptGeneratePage = () => {
               Formulaire de Génération de Reçus
             </Typography>
             <form onSubmit={handleGenerateReceipts}>
-              <FormControl fullWidth margin="normal" required>
-                <InputLabel id="market-select-label">Marché</InputLabel>
-                <Select
-                  labelId="market-select-label"
-                  value={selectedMarket}
-                  onChange={(e) => setSelectedMarket(e.target.value)}
-                  label="Marché"
-                >
-                  {markets.map((market) => (
-                    <MenuItem key={market._id} value={market._id}>
-                      {market.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <FormControl fullWidth margin="normal" required>
+  <InputLabel id="market-select-label">Marché</InputLabel>
+  <Select
+    labelId="market-select-label"
+    value={selectedMarket}
+    onChange={handleMarketChange} // Utilisation de la fonction modifiée
+    label="Marché"
+  >
+    {markets.map((market) => (
+      <MenuItem key={market._id} value={market._id}>
+        {market.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+<FormControl fullWidth margin="normal" required>
+  <InputLabel id="collector-select-label">Collecteur</InputLabel>
+  <Select
+    labelId="collector-select-label"
+    value={selectedCollector}
+    onChange={(e) => setSelectedCollector(e.target.value)}
+    label="Collecteur"
+  >
+    {availableCollectors.map((collector) => (
+      <MenuItem key={collector._id} value={collector._id}>
+        {collector.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
 
               <TextField
                 label="Reçu Départ"
@@ -247,7 +308,15 @@ const ReceiptGeneratePage = () => {
     <TableRow key={batch._id}>
       <TableCell>{batch.market?.name || "Marché inconnu"}</TableCell>
       <TableCell>{batch.market?.location || "Localisation non définie"}</TableCell>
-      <TableCell>{batch.collector?.name || "Collecteur inconnu"}</TableCell>
+      <TableCell>
+  {Array.isArray(batch.collector) && batch.collector.length > 0 
+    ? batch.collector.map((collector, idx) => (
+        <div key={idx}>{collector.name}</div>
+      ))
+    : "Collecteur inconnu"
+  }
+</TableCell>
+
       <TableCell>{batch.startReceipt || "Non défini"}</TableCell>
       <TableCell>{batch.endReceipt || "Non défini"}</TableCell>
       {/* <TableCell>{batch.status || "Statut non défini"}</TableCell> */}

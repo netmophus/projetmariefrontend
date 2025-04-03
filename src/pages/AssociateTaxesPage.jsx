@@ -21,24 +21,7 @@ function AssociateTaxesPage() {
   const [selectedTaxpayer, setSelectedTaxpayer] = useState(null);
   const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
  
-  // const fetchTaxpayers = async () => {
-  //   try {
-  //     const response = await fetch(`${API_URL}/api/taxpayers/taxpayers-with-taxes`, {
-  //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem('token')}`,
-  //       },
-  //     });
-  //     if (!response.ok) {
-  //       throw new Error('Erreur lors de la récupération des contribuables.');
-  //     }
-  //     const data = await response.json();
-  //     console.log("Données des contribuables :", data); 
-  //     setTaxpayers(data); 
-  //   } catch (err) {
-  //     console.error('Erreur :', err.message);
-  //   }
-  // };
-  
+ 
   
   const fetchTaxpayers = async () => {
     try {
