@@ -150,21 +150,7 @@ const fetchActiveTaxpayers = async () => {
   };
 
   // ✅ Fonction pour récupérer les paiements en retard
-  // const fetchOverduePayments = async () => {
-  //   try {
-  //     const response = await fetch(`${API_URL}/api/collector-dashboard/overdue-payments`, {
-  //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem('token')}`,
-  //       },
-  //     });
-  //     if (!response.ok) throw new Error('Erreur lors de la récupération des paiements en retard.');
-  //     const data = await response.json();
-  //     setTotalOverdue(data.totalOverdue);
-  //     setOverduePayments(data.overduePayments);
-  //   } catch (err) {
-  //     console.error('Erreur :', err.message);
-  //   }
-  // };
+
 
 // Fonction pour récupérer les paiements en retard
 const fetchOverduePayments = async () => {
@@ -251,22 +237,8 @@ const sendNotifications = async (message, recipients) => {
 
 
 
-  // const fetchActiveReceipts = async () => {
-  //   try {
-  //     const response = await fetch(`${API_URL}/api/collector-dashboard/active-receipts`, {
-  //       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  //     });
   
-  //     if (!response.ok) throw new Error('Erreur lors de la récupération des reçus activés.');
   
-  //     const data = await response.json();
-  //     setActiveReceipts(data.activeReceipts); // Mettre à jour l'état avec les reçus activés
-  //   } catch (err) {
-  //     console.error("Erreur :", err.message);
-  //   }
-  // };
-  
-  // Charger les reçus activés au montage du composant
   const fetchActiveReceipts = async () => {
     try {
       const response = await fetch(`${API_URL}/api/collector-dashboard/active-receipts`, {

@@ -52,57 +52,7 @@ function AssociateTaxToTaxpayerModal({ open, onClose, taxpayer, onSave }) {
     }
   };
 
-  // Met à jour taxSurfaces pour une taxe donnée
-  // const handleSurfaceChange = (taxId, value) => {
-  //   setTaxSurfaces(prev => ({
-  //     ...prev,
-  //     [taxId]: value,
-  //   }));
-  // };
 
-
-
-  // const handleSave = async () => {
-  //   // Préparer le payload en envoyant les IDs des taxes et l'objet surfaces
-  //   const payload = {
-  //     taxes: selectedTaxes,
-  //     surfaces: taxSurfaces,
-  //   };
-  
-  //   // Log du payload envoyé
-  //   console.log("Payload envoyé pour l'association des taxes :", payload);
-  
-  //   try {
-  //     const response = await fetch(
-  //       `${API_URL}/api/taxpayers/${taxpayer._id}/associate-taxes`,
-  //       {
-  //         method: 'PUT',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //           Authorization: `Bearer ${localStorage.getItem('token')}`,
-  //         },
-  //         body: JSON.stringify(payload),
-  //       }
-  //     );
-  
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       console.error("Erreur lors de la réponse du serveur :", errorData);
-  //       throw new Error(errorData.message || 'Erreur lors de l’association des taxes.');
-  //     }
-  
-  //     const data = await response.json();
-  //     console.log("Réponse du serveur après association :", data);
-  
-  //     alert('Taxes associées avec succès.');
-  //     onClose();
-  //     onSave(); // Rafraîchir la liste si nécessaire
-  //   } catch (err) {
-  //     console.error("Erreur dans handleSave :", err.message);
-  //     alert(err.message);
-  //   }
-  // };
-  
 
 
 const handleSave = async () => {

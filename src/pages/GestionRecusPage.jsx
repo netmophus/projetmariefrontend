@@ -169,8 +169,10 @@ const handleGeneratePDF = async () => {
         number: code.receipt || "N/A",
         taxNumber: code.receipt || "N/A",
         confirmationCode: code.code || "N/A",
-        amount: "500 FCFA", // Montant fixe ou basé sur une logique
-        collectorName: batchDetails.collector?.name || "Non défini",
+        amount: "", // Montant fixe ou basé sur une logique
+        collectorName: batchDetails.collector[0]?.name || "Non défini",
+        collectorPhone: batchDetails.collector[0]?.phone || "Non défini", // Ajoutez cette ligne pour le numéro de téléphone si vous voulez l'afficher
+        
         paymentDate: batchDetails.createdAt
           ? new Date(batchDetails.createdAt).toLocaleDateString()
           : "Date inconnue",

@@ -328,7 +328,7 @@ useEffect(() => {
             </Typography>
 
             <Typography variant="body1">
-              Montant attendu : {currentReceipt.amount || "500 FCFA"}
+              Montant attendu : {currentReceipt.amount || " en FCFA"}
             </Typography>
           </Paper>
   
