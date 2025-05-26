@@ -80,28 +80,7 @@ const [availableCollectors, setAvailableCollectors] = useState([]); // Collecteu
   
 
   // Fonction pour générer des reçus
-  // const handleGenerateReceipts = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const response = await axios.post(
-  //       `${API_URL}/api/receipt-batches`,
-  //       { market: selectedMarket, startReceipt, endReceipt },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     alert("Reçus générés avec succès !");
-  //     // Recharger les données depuis l'API
-  //     await fetchReceiptBatches();
-  //     // Réinitialiser les champs du formulaire
-  //     setSelectedMarket("");
-  //     setStartReceipt("");
-  //     setEndReceipt("");
-  //     setIsFormVisible(false); // Cache le formulaire après l'ajout
-  //   } catch (error) {
-  //     console.error("Erreur lors de la génération des reçus :", error.message);
-  //     alert("Erreur lors de la génération des reçus.");
-  //   }
-  // };
+ 
   
   const handleGenerateReceipts = async (e) => {
     e.preventDefault();

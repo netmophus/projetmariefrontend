@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState , useEffect} from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import AuthContext from '../context/AuthContext';
 import ChangePasswordModal from '../components/ChangePasswordModal'; // Importer le modal
@@ -9,6 +9,27 @@ function ProfilePage() {
   const [openModal, setOpenModal] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
+
+
+  const [profile, setProfile] = useState(null);
+
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/profile/me`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await res.json();
+      setProfile(data);
+    } catch (err) {
+      console.error("Erreur chargement profil :", err);
+    }
+  };
+
+  fetchProfile();
+}, []);
 
 
   const handleSavePassword = async (currentPassword, newPassword) => {

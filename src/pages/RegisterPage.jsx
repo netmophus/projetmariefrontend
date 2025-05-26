@@ -28,11 +28,20 @@ function RegisterPage() {
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL; // Pour Create React App
 
+  // const roles = [
+  //   { value: 'admin', label: 'Administrateur' },
+  //   { value: 'collector', label: 'Collecteur' },
+  //   { value: 'contribuable', label: 'Contribuable' },
+  // ];
+
+
   const roles = [
     { value: 'admin', label: 'Administrateur' },
     { value: 'collector', label: 'Collecteur' },
     { value: 'contribuable', label: 'Contribuable' },
+    { value: 'chefmarket', label: 'Chef de Marché' },
   ];
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();

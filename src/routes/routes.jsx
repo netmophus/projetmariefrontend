@@ -46,6 +46,31 @@ import TaxAssessmentsPage from '../pages/TaxAssessmentsPage';
 import DissociateTaxesPage from '../pages/DissociateTaxesPage';
 import UnpaidManagementPage from '../pages/UnpaidManagementPage';
 //import PaymentConfirmation from "../components/PaymentConfirmation";
+import ChefMarketDashboardPage from '../pages/chefmarket/ChefMarketDashboardPage';
+import MarketcollectorManagementPage from '../pages/chefmarket/MarketcollectorManagementPage';
+// import MarketManagementPage from '../pages/chefmarket/MarketManagementPage';
+
+import ChefmarketAssignCollectorsPage from '../pages/chefmarket/ChefmarketAssignCollectorsPage';
+import AddBoutiqueChefmarketPage from '../pages/chefmarket/AddBoutiqueChefmarketPage';
+import ChefmarketBoutiqueModelsPage from '../pages/chefmarket/ChefmarketBoutiqueModelsPage';
+import CommercantCreatePage from '../pages/chefmarket/CommercantCreatePage';
+import AssignBoutiqueToCommercantPage from '../pages/chefmarket/AssignBoutiqueToCommercantPage';
+import PaiementLocationPage from '../pages/chefmarket/PaiementLocationPage';
+import SuiviPaiementsPage from '../pages/chefmarket/SuiviPaiementsPage';
+import GestionTaxeMarchePage from '../pages/chefmarket/GestionTaxeMarchePage';
+import GenererRecusPage from '../pages/chefmarket/GenererRecusPage';
+import ActiverRecusPage from '../pages/chefmarket/ActiverRecusPage';
+import EnvoyerAImpressionPage from '../pages/chefmarket/EnvoyerAImpressionPage';
+import VerifRecuPage from '../pages/chefmarket/VerifRecuPage';
+
+import MarketCollectorPaiementRecuPage from '../pages/chefmarket/MarketCollectorPaiementRecuPage';
+
+import MarketCollectorDashboardPage from '../pages/marketcollector/MarketCollectorDashboardPage';
+import ChefmarcheReportingPaiementsPage from '../pages/chefmarket/ChefmarcheReportingPaiementsPage';
+
+import MarketManagementPage from '../pages/admin/MarketManagementPage';
+import ChefMarketGestionMarchePage from   '../pages/chefmarket/ChefMarketGestionMarchePage';
+
 // Définir une route protégée
 const ProtectedRoute = ({ role, children }) => {
   const { user } = useContext(AuthContext); // Utiliser AuthContext pour accéder à l'utilisateur
@@ -102,14 +127,7 @@ const AppRoutes = () => {
   }
 />
 
-   <Route
-  path="/profile"
-  element={
-    <ProtectedRoute role="contribuable">
-      <ProfilePage />
-    </ProtectedRoute>
-  }
-/>      
+  
 
 
 {/* <Route
@@ -361,6 +379,14 @@ const AppRoutes = () => {
   }
 />
 
+<Route
+  path="/admin/market-management"
+  element={
+    <ProtectedRoute role="admin">
+      <MarketManagementPage />
+    </ProtectedRoute>
+  }
+/>
 
 
 <Route
@@ -429,6 +455,199 @@ const AppRoutes = () => {
     </ProtectedRoute>
   }
 />
+
+
+<Route
+  path="/chefmarket-dashboard"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ChefMarketDashboardPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/chefmarket/collectors"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <MarketcollectorManagementPage />
+    </ProtectedRoute>
+  }
+/>
+
+{/* <Route
+  path="/chefmarket/gestion-marche"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <MarketManagementPage />
+    </ProtectedRoute>
+  }
+/> */}
+
+
+<Route
+  path="/chefmarket/assign-collectors"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ChefmarketAssignCollectorsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/chefmarket/boutiques"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <AddBoutiqueChefmarketPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/chefmarket/boutique-models"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ChefmarketBoutiqueModelsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/chefmarket/ajout-commercant"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <CommercantCreatePage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+        path="/chefmarket/assign-boutiques"
+        element={
+          <ProtectedRoute role="chefmarket">
+            <AssignBoutiqueToCommercantPage />
+          </ProtectedRoute>
+        }
+      />
+
+
+<Route
+  path="/chefmarket/paiements-location"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <PaiementLocationPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/chefmarket/suivi-paiements"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <SuiviPaiementsPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
+<Route
+  path="/chefmarket/gestion-taxe-marche"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <GestionTaxeMarchePage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
+<Route
+  path="/chefmarket/generer-recus"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <GenererRecusPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/chefmarket/activer-recus"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ActiverRecusPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
+<Route
+  path="/chefmarket/impression-recus"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <EnvoyerAImpressionPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/collector/paiement-recu"
+  element={
+    <ProtectedRoute role="collector">
+      <MarketCollectorPaiementRecuPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/collector/dashboard"
+  element={
+    <ProtectedRoute role="collector">
+      <MarketCollectorDashboardPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/chefmarket/reporting-paiements"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ChefmarcheReportingPaiementsPage />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="/chefmarket/gestion-marche"
+  element={
+    <ProtectedRoute role="chefmarket">
+      <ChefMarketGestionMarchePage />
+    </ProtectedRoute>
+  }
+/>
+
+
+
+<Route path="/verif-recu" element={<VerifRecuPage />} />
 
 
     </Routes>

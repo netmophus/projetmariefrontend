@@ -266,6 +266,11 @@ function AdminDashboard() {
   </Paper>
 </Grid>
 
+
+
+
+
+
         {/* Reçus Actifs */}
    {/* Carte unique pour les statistiques des reçus */}
 <Grid item xs={12} md={6}>
@@ -348,14 +353,64 @@ function AdminDashboard() {
 
 
 
+<Grid item xs={12}>
+  <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+    Nouvelle Gestion de Marché
+  </Typography>
+</Grid>
+
+
+<Grid item xs={12} md={4}>
+  <Card sx={{ boxShadow: 3, backgroundColor: '#fff', p: 2, textAlign: 'center' }}>
+    <Avatar sx={{ bgcolor: '#9c27b0', mx: 'auto', width: 60, height: 60, mb: 2 }}>
+      <AddCircleOutlineIcon fontSize="large" />
+    </Avatar>
+    <Typography variant="h6">Gestion de Marché</Typography>
+    <Typography variant="body2" sx={{ mt: 1, mb: 1, color: 'text.secondary' }}>
+      Créer un marché, un chef de marché et faire l’association.
+    </Typography>
+    <Button
+      variant="contained"
+      color="secondary"
+      fullWidth
+      sx={{ mt: 2 }}
+      onClick={() => navigate('/admin/market-management')}
+    >
+      Gérer
+    </Button>
+  </Card>
+</Grid>
 
 
 
-
-
-
-
-
+<Grid item xs={12} md={4}>
+  <Card
+    onClick={() => navigate('/admin/chefmarket-stats')}
+    sx={{
+      boxShadow: 3,
+      backgroundColor: '#fff',
+      p: 2,
+      textAlign: 'center',
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      '&:hover': {
+        transform: 'scale(1.03)',
+        boxShadow: 6,
+      },
+    }}
+  >
+    <Avatar sx={{ bgcolor: '#009688', mx: 'auto', width: 60, height: 60, mb: 2 }}>
+      <PieChartIcon fontSize="large" />
+    </Avatar>
+    <Typography variant="h6">Marchés Gérés</Typography>
+    <Typography variant="body2" sx={{ mt: 1, mb: 1, color: 'text.secondary' }}>
+      Accédez aux statistiques détaillées de chaque marché.
+    </Typography>
+    <Button variant="contained" color="success" fullWidth sx={{ mt: 2 }}>
+      Voir
+    </Button>
+  </Card>
+</Grid>
 
 
 

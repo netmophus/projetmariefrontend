@@ -30,6 +30,64 @@ function LoginPage() {
 
 
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError('');
+  
+  //   if (!phone || !password) {
+  //     setError('Veuillez remplir tous les champs.');
+  //     return;
+  //   }
+  
+  //   // ✅ Ajouter automatiquement +227 si ça n'existe pas déjà
+  //   const formattedPhone = phone.startsWith('+227') ? phone : `+227${phone}`;
+  
+  //   setLoading(true); // Activer l'indicateur de chargement
+  
+  //   try {
+  //     const response = await fetch(`${API_URL}/api/auth/login`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ phone: formattedPhone, password }),
+  //     });
+  
+  //     const data = await response.json();
+  
+  //     if (!response.ok) {
+  //       throw new Error(data.message || 'Erreur de connexion');
+  //     }
+  
+  //     login(data.user, data.token);
+  
+  //     // Redirection basée sur le rôle
+  //     if (data.user.role === 'admin') {
+  //       navigate('/admin-dashboard');
+  //     }
+      
+      
+  //     else if (data.user.role === 'collector') {
+  //       navigate('/collector-dashboard');
+
+
+
+
+        
+  //     } else if (data.user.role === 'contribuable') {
+  //       navigate('/contribuable-dashboard');
+  //     }  else if (data.user.role === 'chefmarket') {
+  //       navigate('/chefmarket-dashboard');
+  //     }
+      
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false); // Désactiver l'indicateur de chargement
+  //   }
+  // };
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -39,43 +97,55 @@ function LoginPage() {
       return;
     }
   
-    // ✅ Ajouter automatiquement +227 si ça n'existe pas déjà
+    // On normalise le numéro
     const formattedPhone = phone.startsWith('+227') ? phone : `+227${phone}`;
-  
-    setLoading(true); // Activer l'indicateur de chargement
+    setLoading(true);
   
     try {
+      // 1) Appel du login
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: formattedPhone, password }),
       });
-  
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erreur de connexion');
   
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur de connexion');
-      }
-  
+      // 2) On stocke token + user dans le contexte
       login(data.user, data.token);
   
-      // Redirection basée sur le rôle
-      if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (data.user.role === 'collector') {
-        navigate('/collector-dashboard');
-      } else if (data.user.role === 'contribuable') {
-        navigate('/contribuable-dashboard');
+      // 3) Redirections par rôle et collectorType
+      switch (data.user.role) {
+        case 'admin':
+          navigate('/admin-dashboard');
+          break;
+        case 'chefmarket':
+          navigate('/chefmarket-dashboard');
+          break;
+        case 'contribuable':
+          navigate('/contribuable-dashboard');
+          break;
+        case 'collector':
+          // On utilise directement le collectorType renvoyé par le back
+          if (data.user.collectorType === 'marche') {
+            navigate('/collector/dashboard');    // Collecteur de marché
+          } else {
+            navigate('/collector-dashboard');    // Collecteur mairie
+          }
+          break;
+        default:
+          throw new Error('Rôle utilisateur non géré');
       }
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false); // Désactiver l'indicateur de chargement
+      setLoading(false);
     }
   };
   
+  
+
+
   return (
     <Box
       sx={{
